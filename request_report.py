@@ -42,11 +42,15 @@ def fetch_report_url(report_url):
         lms_url=SETTINGS.get('LMS_URL'),
         report_url=report_url
     )
-    data = {
-        'course_ids': [
-            'course-v1:TEST+TEST101+2019'
-        ]
-    }
+    courses = SETTINGS.get('COURSES', [])
+    if not courses:
+        print('Course id was not provided')
+        exit()
+
+    data = {}
+    data.update({
+        'course_ids': courses
+    })
 
     response = requests.post(request_url, headers=headers, json=data)
 
