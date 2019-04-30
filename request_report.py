@@ -7,10 +7,14 @@ import json
 
 from get_settings import get_settings
 
-SETTINGS = get_settings()
+SETTINGS = {}
 report_backend = None
 
 def init_report(report_name):
+
+    global report_backend
+    global SETTINGS
+    SETTINGS = get_settings()
 
     if not report_name in SETTINGS.get('SUPPORTED_REPORTS', []):
         print('Report is not suported.')
@@ -23,7 +27,7 @@ def init_report(report_name):
         exit()
 
     report_url = report_settings.get('REPORT_URL', '')
-    global report_backend
+
     report_backend = get_backend_report(report_settings)
 
     fetch_report_url(report_url)

@@ -4,7 +4,13 @@ import json
 
 def get_settings():
 
-    with open(os.path.join(os.path.dirname(__file__), 'config.json'), 'r') as config_file:
+    configuration_file_path = os.getenv('CONFIGURATION_FILE_PATH', None)
+
+    if not configuration_file_path:
+        print('Configuration file path was not provided.')
+        exit()
+
+    with open(configuration_file_path, 'r') as config_file:
         config_data = config_file.read()
 
     try:
