@@ -44,7 +44,7 @@ def fetch_report_url(report_url):
     )
     data = {
         'course_ids': [
-            'course-v1:GCS+GCS001+2018'
+            'course-v1:TEST+TEST101+2019'
         ]
     }
 
