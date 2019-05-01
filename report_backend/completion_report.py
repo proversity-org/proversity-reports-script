@@ -44,6 +44,7 @@ class CompletionReportBackend(AbstractBaseReportBackend):
                     'team': team,
                 }
                 dict_writer_data.update(vertical)
+                print(dict_writer_data)
                 csv_data.append(dict_writer_data)
 
             self.create_csv_file(course, csv_data)
@@ -60,7 +61,6 @@ class CompletionReportBackend(AbstractBaseReportBackend):
 
         with open(path_file, mode='w', encoding='utf-8') as csv_file:
             column_headers = body_dict[0].keys()
-            print(column_headers)
             writer = csv.DictWriter(csv_file, fieldnames=column_headers)
 
             writer.writeheader()
