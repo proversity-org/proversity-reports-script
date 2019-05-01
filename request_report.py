@@ -96,7 +96,8 @@ def polling_report_data(report_data_url):
 
 def fetch_data_report(report_data_url):
     headers = {
-        'Authorization': 'Bearer {}'.format(SETTINGS.get('OPEN_EDX_OAUTH_TOKEN'))
+        'Authorization': 'Bearer {}'.format(SETTINGS.get('OPEN_EDX_OAUTH_TOKEN')),
+        'Content-Type': 'application/json'
     }
     request_url = '{report_url}'.format(
         report_url=report_data_url["state_url"]

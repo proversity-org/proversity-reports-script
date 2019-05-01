@@ -51,7 +51,7 @@ class CompletionReportBackend(AbstractBaseReportBackend):
                 od['team'] = team
 
                 dict_writer_data = dict(od)
-                print(dict_writer_data)
+
                 dict_writer_data.update(vertical)
                 csv_data.append(dict_writer_data)
 
