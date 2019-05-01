@@ -5,13 +5,13 @@ import boto3
 from datetime import datetime
 
 
-class CompletionReportBackend(AbstractBaseReportBackend):
+class LastPageAccessedReportBackend(AbstractBaseReportBackend):
     """
-    Backend for Completion report.
+    Backend for last time report accessed.
     """
 
     def __init__(self, **kwargs):
-        super(CompletionReportBackend, self).__init__(**kwargs)
+        super(LastPageAccessedReportBackend, self).__init__(**kwargs)
 
 
     def json_report_to_csv(self, json_report_data={}):
@@ -32,18 +32,14 @@ class CompletionReportBackend(AbstractBaseReportBackend):
 
             for user in course_data:
                 username = user.get('username', '')
-                user_id = user.get('user_id', '')
-                cohort = user.get('cohort', '')
-                team = user.get('team', '')
-                vertical = user.get('vertical', {})
+                last_time_accessed = user.get('last_time_accessed', '')
+                page_url = user.get('page_url', '')
 
                 dict_writer_data = {
-                    'user_id': user_id,
                     'username': username,
-                    'cohort': cohort,
-                    'team': team,
+                    'last_time_accessed': last_time_accessed,
+                    'page_url': page_url,
                 }
-                dict_writer_data.update(vertical)
                 csv_data.append(dict_writer_data)
 
             self.create_csv_file(course, csv_data)
@@ -59,20 +55,11 @@ class CompletionReportBackend(AbstractBaseReportBackend):
         )
 
         with open(path_file, mode='w', encoding='utf-8') as csv_file:
-            column_headers = body_dict[0].keys()
+            column_headers = ['username','last_time_accessed', 'page_url']
             writer = csv.DictWriter(csv_file, fieldnames=column_headers)
 
             writer.writeheader()
-            static_headers = ['user_id', 'username', 'cohort', 'team']
-
             for row in body_dict:
-                for key, value in row.items():
-                    if key not in static_headers:
-                        if not value:
-                            row[key] = ''
-                        else:
-                            row[key] = 'X'
-
                 writer.writerow(row)
 
         self.upload_file_to_storage(course, path_file)
@@ -88,7 +75,7 @@ class CompletionReportBackend(AbstractBaseReportBackend):
 
         reports_bucket.upload_file(
             path_file,
-            'cabinet/{course}/completion_report/{date}.csv'.format(
+            'cabinet/{course}/last_page_accessed/{date}.csv'.format(
                 course=course,
                 date=now
             )
