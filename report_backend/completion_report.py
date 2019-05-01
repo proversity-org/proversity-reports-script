@@ -3,6 +3,7 @@ import csv
 import os
 import boto3
 from datetime import datetime
+from collections import OrderedDict
 
 
 class CompletionReportBackend(AbstractBaseReportBackend):
@@ -37,12 +38,20 @@ class CompletionReportBackend(AbstractBaseReportBackend):
                 team = user.get('team', '')
                 vertical = user.get('vertical', {})
 
-                dict_writer_data = {
-                    'user_id': user_id,
-                    'username': username,
-                    'cohort': cohort,
-                    'team': team,
-                }
+                od = OrderedDict() 
+                #dict_writer_data = {
+                 #   'user_id': user_id,
+                  #  'username': username,
+                   # 'cohort': cohort,
+                    #'team': team,
+                #}
+                od['user_id'] = user_id
+                od['username'] = username
+                od['cohort'] = cohort
+                od['team'] = team
+
+                dict_writer_data = dict(od)
+
                 dict_writer_data.update(vertical)
                 print(dict_writer_data)
                 csv_data.append(dict_writer_data)
