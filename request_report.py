@@ -68,6 +68,7 @@ def polling_report_data(report_data_url):
     report_data = fetch_data_report(report_data_url)
 
     while (report_data.get('status') != "SUCCESS"):
+        # import ipdb; ipdb.set_trace()
         polling_count += 1
         sleep_for = 2 # every 2 seconds for 10 seconds
 
@@ -85,8 +86,10 @@ def polling_report_data(report_data_url):
             exit()
 
         sleep(sleep_for)
+        print('waitig for... {}'.format(sleep_for))
         report_data = fetch_data_report(report_data_url)
 
+    print('Got it...')
     report_builder = report_backend()
     report_builder.json_report_to_csv(report_data)
 
@@ -98,9 +101,12 @@ def fetch_data_report(report_data_url):
     request_url = '{report_url}'.format(
         report_url=report_data_url["state_url"]
     )
+    print('task id... {}'.format(report_data_url["state_url"]))
 
     response = requests.get(request_url, headers=headers)
     json_response = {}
+
+    print('status code... {}'.format(response.status_code))
 
     if response.status_code == 200:
         json_response = response.json()

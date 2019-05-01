@@ -60,6 +60,7 @@ class CompletionReportBackend(AbstractBaseReportBackend):
 
         with open(path_file, mode='w', encoding='utf-8') as csv_file:
             column_headers = body_dict[0].keys()
+            print(column_headers)
             writer = csv.DictWriter(csv_file, fieldnames=column_headers)
 
             writer.writeheader()
