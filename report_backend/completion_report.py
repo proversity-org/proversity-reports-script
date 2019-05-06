@@ -14,7 +14,6 @@ class CompletionReportBackend(AbstractBaseReportBackend):
     def __init__(self, **kwargs):
         super(CompletionReportBackend, self).__init__(**kwargs)
 
-
     def json_report_to_csv(self, json_report_data={}):
         """
         Process json data to convert into csv format.
@@ -27,6 +26,8 @@ class CompletionReportBackend(AbstractBaseReportBackend):
 
         course_list = report_data.keys()
 
+        general_course_data = {}
+
         for course in course_list:
             course_data = report_data.get(course, [])
             csv_data = []
@@ -36,27 +37,46 @@ class CompletionReportBackend(AbstractBaseReportBackend):
                 user_id = user.get('user_id', '')
                 cohort = user.get('cohort', '')
                 team = user.get('team', '')
-                vertical = user.get('vertical', {})
+                vertical_components = user.get('vertical', {})
 
-                od = OrderedDict() 
-                #dict_writer_data = {
-                 #   'user_id': user_id,
-                  #  'username': username,
-                   # 'cohort': cohort,
-                    #'team': team,
-                #}
-                od['user_id'] = user_id
+                vertical = OrderedDict()
+
+                for component in vertical_components:
+
+                    name = '{}-{}'.format(component.get('subsection_name'), component.get('name'))
+                    name = self._verify_name(name, vertical)
+                    vertical[name] = component.get('complete')
+
+                    unit = general_course_data.get(component.get('number'))
+
+                    if not unit:
+                        unit_data = OrderedDict()
+                        unit_data['Section Number'] = component.get('section_number')
+                        unit_data['Section'] = '{}-{}'.format(component.get('section_number'), component.get('section_name'))
+                        unit_data['Subsection Number'] = component.get('subsection_number')
+                        unit_data['Subsection'] = '{}-{}'.format(component.get('subsection_number'), component.get('subsection_name'))
+                        unit_data['Unit Number'] = component.get('number')
+                        unit_data['Unit'] = name
+                        unit_data['Complete'] = 1 if component.get('complete') else 0
+                        unit_data['Incomplete'] = 0 if component.get('complete') else 1
+                        general_course_data[component.get('number')] = unit_data
+                    else:
+                        unit['Complete'] = 1 + unit['Complete'] if component.get('complete') else unit['Complete']
+                        unit['Incomplete'] = unit['Incomplete'] if component.get('complete') else 1 + unit['Incomplete']
+
+                od = OrderedDict()
                 od['username'] = username
+                od['user_id'] = user_id
                 od['cohort'] = cohort
                 od['team'] = team
-
-                dict_writer_data = dict(od)
-
-                dict_writer_data.update(vertical)
-                csv_data.append(dict_writer_data)
+                od.update(vertical)
+                csv_data.append(od)
 
             self.create_csv_file(course, csv_data)
-
+            self.create_csv_file(
+                'general_course_data-{}'.format(course),
+                [general_course_data[key]for key in general_course_data]
+            )
 
     def create_csv_file(self, course, body_dict):
         """
@@ -66,26 +86,25 @@ class CompletionReportBackend(AbstractBaseReportBackend):
             parent_folder=os.path.join(os.path.dirname(__file__), os.pardir),
             course=course
         )
+        if body_dict:
+            with open(path_file, mode='w', encoding='utf-8') as csv_file:
+                column_headers = body_dict[0].keys()
+                writer = csv.DictWriter(csv_file, fieldnames=column_headers)
 
-        with open(path_file, mode='w', encoding='utf-8') as csv_file:
-            column_headers = body_dict[0].keys()
-            writer = csv.DictWriter(csv_file, fieldnames=column_headers)
+                writer.writeheader()
+                static_headers = ['user_id', 'username', 'cohort', 'team']
 
-            writer.writeheader()
-            static_headers = ['user_id', 'username', 'cohort', 'team']
+                for row in body_dict:
+                    for key, value in row.items():
+                        if key not in static_headers:
+                            if not value and isinstance(value, bool):
+                                row[key] = ''
+                            elif isinstance(value, bool):
+                                row[key] = 'X'
 
-            for row in body_dict:
-                for key, value in row.items():
-                    if key not in static_headers:
-                        if not value:
-                            row[key] = ''
-                        else:
-                            row[key] = 'X'
+                    writer.writerow(row)
 
-                writer.writerow(row)
-
-        self.upload_file_to_storage(course, path_file)
-
+            self.upload_file_to_storage(course, path_file)
 
     def upload_file_to_storage(self, course, path_file):
         """
@@ -102,3 +121,19 @@ class CompletionReportBackend(AbstractBaseReportBackend):
                 date=now
             )
         )
+
+    def _verify_name(self, name, data):
+        """
+        This verifies if the name is already in use and generates a new one.
+        """
+        if name in data:
+            identifier = name.split('-')[-1]
+            try:
+                number = int(identifier) + 1
+                name = name.replace(identifier, str(number))
+            except ValueError:
+                name = u"{}-{}".format(name, "1")
+
+            name = self._verify_name(name, data)
+
+        return name
