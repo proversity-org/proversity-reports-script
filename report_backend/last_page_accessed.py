@@ -1,8 +1,14 @@
-from .base import AbstractBaseReportBackend
+"""
+Last page accessed reports backend.
+"""
 import csv
-import os
-import boto3
 from datetime import datetime
+import os
+
+import boto3
+
+
+from .base import AbstractBaseReportBackend
 
 
 class LastPageAccessedReportBackend(AbstractBaseReportBackend):
@@ -24,45 +30,43 @@ class LastPageAccessedReportBackend(AbstractBaseReportBackend):
             print('No report data...')
             exit()
 
-        course_list = report_data.keys()
+        if report_data.get('last_page_data'):
+            last_page_data = report_data.get('last_page_data')
+            for course in last_page_data.keys():
+                last_page_report = self.last_page_accessed_report(course, last_page_data)
+                last_page_report_headers = ['username', 'last_time_accessed', 'last_page_viewed']
+                file_name = '{}-table'.format(course)
 
-        for course in course_list:
-            course_data = report_data.get(course, [])
-            csv_data = []
+                self.create_csv_file(file_name, last_page_report, last_page_report_headers)
 
-            for user in course_data:
-                username = user.get('username', '')
-                last_time_accessed = user.get('last_time_accessed', '')
-                page_url = user.get('page_url', '')
+        if report_data.get('exit_count_data'):
+            exit_count_data = report_data.get('exit_count_data')
+            for course in last_page_data.keys():
+                exit_count_report = self.exit_count_report(course, exit_count_data)
+                exit_count_report_headers = ['page_title', 'exit_count',]
+                file_name = '{}-bar-chart'.format(course)
 
-                dict_writer_data = {
-                    'username': username,
-                    'last_time_accessed': last_time_accessed,
-                    'page_url': page_url,
-                }
-                csv_data.append(dict_writer_data)
-
-            self.create_csv_file(course, csv_data)
+                self.create_csv_file(file_name, exit_count_report, exit_count_report_headers)
 
 
-    def create_csv_file(self, course, body_dict):
+    def create_csv_file(self, file_name, body_dict, headers):
         """
         Creates the csv file with the passed arguments, and then save it locally.
         """
-        path_file = '{parent_folder}/result/{course}.csv'.format(
+        path_file = '{parent_folder}/result/{file_name}.csv'.format(
             parent_folder=os.path.join(os.path.dirname(__file__), os.pardir),
-            course=course
+            file_name=file_name
         )
 
         with open(path_file, mode='w', encoding='utf-8') as csv_file:
-            column_headers = ['username','last_time_accessed', 'page_url']
+            column_headers = headers
             writer = csv.DictWriter(csv_file, fieldnames=column_headers)
 
             writer.writeheader()
             for row in body_dict:
                 writer.writerow(row)
 
-        self.upload_file_to_storage(course, path_file)
+        self.upload_file_to_storage(file_name, path_file)
 
 
     def upload_file_to_storage(self, course, path_file):
@@ -80,3 +84,51 @@ class LastPageAccessedReportBackend(AbstractBaseReportBackend):
                 date=now
             )
         )
+
+
+    def last_page_accessed_report(self, course, last_page_data):
+        """
+        Returns a csv dict to write the csv file.
+        """
+        if not last_page_data:
+            return {}
+
+        course_data = last_page_data.get(course, [])
+        csv_data = []
+
+        for user in course_data:
+            username = user.get('username', '')
+            last_time_accessed = user.get('last_time_accessed', '')
+            last_page_viewed = user.get('last_page_viewed', '')
+
+            dict_writer_data = {
+                'username': username,
+                'last_time_accessed': last_time_accessed,
+                'last_page_viewed': last_page_viewed,
+            }
+            csv_data.append(dict_writer_data)
+
+        return csv_data
+
+
+    def exit_count_report(self, course, exit_count_data):
+        """
+        Returns a csv dict to write the csv file.
+        """
+        if not exit_count_data:
+            return {}
+
+        course_data = exit_count_data.get(course, [])
+        csv_data = []
+
+        for block in course_data:
+            page_title = block.get('page_title', '')
+            exit_count = block.get('exit_count', '')
+
+            dict_writer_data = {
+                'page_title': page_title,
+                'exit_count': exit_count,
+            }
+            csv_data.append(dict_writer_data)
+
+        return csv_data
