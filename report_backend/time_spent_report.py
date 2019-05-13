@@ -45,7 +45,14 @@ class TimeSpentReportBackend(AbstractBaseReportBackend):
                 course_structure_data = course_data.get('course_structure', [])
 
                 subsection_data = count_analytics_subsections(analytics_data, course_structure_data)
-                report_csv_headers = subsection_data[0].keys()
+                report_csv_headers = [
+                    'section_position',
+                    'section',
+                    'subsection_position',
+                    'subsection',
+                    'time_on_page',
+                    'page_views',
+                ]
 
                 self.create_csv_file(file_name, subsection_data, report_csv_headers)
 
