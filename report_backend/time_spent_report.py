@@ -1,6 +1,7 @@
 """
 Time spent report backend.
 """
+from collections import OrderedDict
 import csv
 from datetime import datetime
 import os
@@ -126,13 +127,13 @@ def count_analytics_subsections(analytics_data, course_structure_data):
             total_page_views += int(analytics_item.get('page_views', 0))
             total_time_on_page += float(analytics_item.get('avg_time_on_page', 0))
 
-        subsection_data.append({
+        subsection_data.append(OrderedDict({
             'section_position': course_block.get('chapter_position', ''),
             'section': course_block.get('chapter_name', ''),
             'subsection_position': course_block.get('sequential_position', ''),
             'subsection': course_block.get('sequential_name', ''),
             'page_views': total_page_views,
             'time_on_page': total_time_on_page,
-        })
+        }))
 
     return subsection_data
