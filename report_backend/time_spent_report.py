@@ -34,15 +34,15 @@ class TimeSpentReportBackend(AbstractBaseReportBackend):
             exit()
 
         if report_data.get('time_spent_data'):
-            time_spent_data = report_data.get('time_spent_data')
-            for course in time_spent_data.keys():
-                file_name = '{}'.format(course)
+            time_spent_data = report_data.get('time_spent_data', {})
+            for course_key, course_data in time_spent_data.items():
+                file_name = '{}'.format(course_key)
 
-                if not time_spent_data.get(course):
+                if not course_data:
                     continue
 
-                analytics_data = time_spent_data.get(course).get('analytics_data', [])
-                course_structure_data = time_spent_data.get(course).get('course_structure', [])
+                analytics_data = course_data.get('analytics_data', [])
+                course_structure_data = course_data.get('course_structure', [])
 
                 subsection_data = count_analytics_subsections(analytics_data, course_structure_data)
                 report_csv_headers = subsection_data[0].keys()
