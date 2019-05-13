@@ -50,8 +50,8 @@ class TimeSpentReportBackend(AbstractBaseReportBackend):
                     'section',
                     'subsection_position',
                     'subsection',
+                    'time_on_page',
                     'page_views',
-                    'time_on_page'
                 ]
 
                 self.create_csv_file(file_name, subsection_data, report_csv_headers)
