@@ -1,17 +1,25 @@
-import requests
-from time import sleep
-import csv
-import boto3
-from importlib import import_module
-import json
+"""
+Main module to request and polling the report data.
+"""
 
-from get_settings import get_settings
+from importlib import import_module
+from time import sleep
+
+import requests
+
+from get_settings import get_settings  # pylint: disable=relative-import
 
 SETTINGS = {}
 report_backend = None
 
-def init_report(report_name):
 
+def init_report(report_name):
+    """
+    Init module to request the report generation.
+
+    Args:
+        report_name: String containing the requested report name from the cli command.
+    """
     global report_backend
     global SETTINGS
     SETTINGS = get_settings()
@@ -34,6 +42,13 @@ def init_report(report_name):
 
 
 def fetch_report_url(report_url):
+    """
+    Request the report generation.
+
+    Args:
+        report_url: API url endpoint to request the report generation take it from the
+                    report configuration settings.
+    """
     headers = {
         'Authorization': 'Bearer {}'.format(SETTINGS.get('OPEN_EDX_OAUTH_TOKEN')),
         'Content-Type': 'application/json',
@@ -63,11 +78,16 @@ def fetch_report_url(report_url):
 
 
 def polling_report_data(report_data_url):
+    """
+    Polling the report data in some configured unit times.
 
+    Args:
+        report_data_url: API url endpoint to request the report data.
+    """
     polling_count = 0
     report_data = fetch_data_report(report_data_url)
 
-    while (report_data.get('status') != "SUCCESS"):
+    while(report_data.get('status') != 'SUCCESS'):
         # import ipdb; ipdb.set_trace()
         polling_count += 1
         sleep_for = 2 # every 2 seconds for 10 seconds
@@ -82,7 +102,11 @@ def polling_report_data(report_data_url):
             sleep_for = 60 # then once a minute for 3
 
         if polling_count >= 16: # then stop
-            print("Status failed to become success")
+            print('Status failed to become success.')
+            exit()
+
+        if report_data.get('status') == 'FAILURE':
+            print('Task failed...')
             exit()
 
         sleep(sleep_for)
@@ -95,14 +119,22 @@ def polling_report_data(report_data_url):
 
 
 def fetch_data_report(report_data_url):
+    """
+    Request for polling the report data.
+
+    Args:
+        report_data_url: API url endpoint to request the report data.
+    Returns:
+        The requests json reponse.
+    """
     headers = {
         'Authorization': 'Bearer {}'.format(SETTINGS.get('OPEN_EDX_OAUTH_TOKEN')),
         'Content-Type': 'application/json'
     }
     request_url = '{report_url}'.format(
-        report_url=report_data_url["state_url"]
+        report_url=report_data_url['state_url']
     )
-    print('task id... {}'.format(report_data_url["state_url"]))
+    print('task id... {}'.format(report_data_url['state_url']))
 
     response = requests.get(request_url, headers=headers)
     json_response = {}
@@ -116,13 +148,16 @@ def fetch_data_report(report_data_url):
 
 
 def get_backend_report(report_settings):
+    """
+    Util function to get the configured report backend from the settings.
+    """
     backend_module_name = report_settings.get('BACKEND_REPORT', '')
 
     if not backend_module_name:
         print('BACKEND_REPORT was not provided.')
         exit()
 
-    module_string = backend_module_name.split(":")
+    module_string = backend_module_name.split(':')
     class_string = module_string[-1]
     backend = import_module(module_string[0])
 

@@ -12,7 +12,7 @@ class AbstractBaseReportBackend(object):
 
 
     @abc.abstractmethod
-    def json_report_to_csv(self, json_report_data={}):
+    def json_report_to_csv(self, json_report_data):
         """
         Process json data to convert into csv format.
         """
@@ -20,7 +20,7 @@ class AbstractBaseReportBackend(object):
 
 
     @abc.abstractmethod
-    def create_csv_file(self, course, body_dict):
+    def create_csv_file(self, file_name, body_dict, headers):
         """
         Creates the csv file with the passed arguments, and then save it locally.
         """
