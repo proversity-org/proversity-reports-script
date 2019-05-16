@@ -50,6 +50,8 @@ class TimeSpentReportBackend(AbstractBaseReportBackend):
                     'section',
                     'subsection_position',
                     'subsection',
+                    'vertical_position',
+                    'vertical_name',
                     'time_on_page',
                     'page_views',
                 ]
@@ -122,14 +124,14 @@ def count_analytics_subsections(analytics_data, course_structure_data):
     subsection_data = []
 
     for course_block in course_structure_data:
-        sequential_id = course_block.get('sequential_id', '')
-        subsections_occurrences = [
-            item for item in analytics_data if sequential_id in item.get('page_path')
+        vertical_id = course_block.get('vertical_id', '')
+        vertical_occurrences = [
+            item for item in analytics_data if vertical_id in item.get('page_path')
         ]
         total_page_views = 0
         total_time_on_page = 0
 
-        for analytics_item in subsections_occurrences:
+        for analytics_item in vertical_occurrences:
             total_page_views += int(analytics_item.get('page_views', 0))
             total_time_on_page += float(analytics_item.get('avg_time_on_page', 0))
 
@@ -138,6 +140,8 @@ def count_analytics_subsections(analytics_data, course_structure_data):
             'section': course_block.get('chapter_name', ''),
             'subsection_position': course_block.get('sequential_position', ''),
             'subsection': course_block.get('sequential_name', ''),
+            'vertical_position': course_block.get('vertical_position', ''),
+            'vertical_name': course_block.get('vertical_name', ''),
             'page_views': total_page_views,
             'time_on_page': total_time_on_page,
         })
