@@ -37,6 +37,7 @@ class CompletionReportBackend(AbstractBaseReportBackend):
                 user_id = user.get('user_id', '')
                 cohort = user.get('cohort', '')
                 team = user.get('team', '')
+                user_role = user.get('user_role', '')
                 vertical_components = user.get('vertical', {})
 
                 vertical = OrderedDict()
@@ -69,6 +70,7 @@ class CompletionReportBackend(AbstractBaseReportBackend):
                 od['user_id'] = user_id
                 od['cohort'] = cohort
                 od['team'] = team
+                od['rol'] = user_role
                 od.update(vertical)
                 csv_data.append(od)
 
