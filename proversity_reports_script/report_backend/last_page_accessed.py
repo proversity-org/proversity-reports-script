@@ -7,8 +7,7 @@ import os
 
 import boto3
 
-
-from .base import AbstractBaseReportBackend
+from proversity_reports_script.report_backend.base import AbstractBaseReportBackend
 
 
 class LastPageAccessedReportBackend(AbstractBaseReportBackend):

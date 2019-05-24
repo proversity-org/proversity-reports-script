@@ -1,3 +1,6 @@
+"""
+Abstract base class for openedx-proversity-reports.
+"""
 import abc
 
 
