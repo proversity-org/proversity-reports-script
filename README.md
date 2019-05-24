@@ -24,7 +24,11 @@ The configuration file must be in json format. e.g.
         ],
         "COMPLETION_REPORT": {
             "REPORT_URL": "example:/proversity-reports/api/v0/generate-completion-report",
-            "BACKEND_REPORT": "example:report_backend.completion_report:CompletionReportBackend"
+            "BACKEND_REPORT": "example:report_backend.completion_report:CompletionReportBackend",
+            "SPREADSHEET_DATA": {
+                "completion_sheet_id": "Spreadsheet id for completion report.",
+                "general_course_sheet_id": "Spreadsheet id for course structure report."
+            }
         },
         "LAST_PAGE_ACCESSED": {
             "REPORT_URL": "path-to-report-generation-url",
@@ -38,8 +42,23 @@ The configuration file must be in json format. e.g.
         The new key must have the keys REPORT_URL and BACKEND_REPORT."
         "COURSES": [
             course-id
-        ]
+        ],
+        "GOOGLE_OAUTH_CREDENTIALS": {
+            "installed": {
+                "client_id": "Google oAuth client ID",
+                "project_id": "Google console project ID",
+                "auth_uri": "oAuth uri",
+                "token_uri": "oAuth token uri",
+                "auth_provider_x509_cert_url": "String",
+                "client_secret": "Google oAuth client secret",
+                "redirect_uris": [
+                    "Google oAuth urls"
+                ]
+            }
+        }
     }
+
+GOOGLE_OAUTH_CREDENTIALS came from downloaded Google oAuth credentials in json format.
 
 ## Running
 

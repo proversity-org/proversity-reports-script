@@ -7,10 +7,11 @@ from time import sleep
 
 import requests
 
-from proversity_reports_script.get_settings import get_settings  # pylint: disable=relative-import
+from proversity_reports_script.get_settings import get_settings
 
 SETTINGS = {}
 report_backend = None
+report_settings = {}
 
 
 def init_report(report_name):
@@ -22,6 +23,8 @@ def init_report(report_name):
     """
     global report_backend
     global SETTINGS
+    global report_settings
+
     SETTINGS = get_settings(should_set_environment_settings=True)
 
     if not report_name in SETTINGS.get('SUPPORTED_REPORTS', []):
@@ -114,7 +117,9 @@ def polling_report_data(report_data_url):
         report_data = fetch_data_report(report_data_url)
 
     print('Got it...')
-    report_builder = report_backend()
+
+    spreadsheet_list = report_settings.get('SPREADSHEET_DATA', {})
+    report_builder = report_backend(spreadsheet_list)
     report_builder.json_report_to_csv(report_data)
 
 

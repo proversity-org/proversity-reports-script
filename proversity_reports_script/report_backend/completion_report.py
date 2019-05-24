@@ -8,9 +8,8 @@ from datetime import datetime
 
 import boto3
 
-from proversity_reports_script.report_backend.base import \
-    AbstractBaseReportBackend
-from proversity_reports_script.google_apis.sheets_api import get_sheets_api_service
+from proversity_reports_script.google_apis.sheets_api import update_sheets_data
+from proversity_reports_script.report_backend.base import AbstractBaseReportBackend
 
 
 class CompletionReportBackend(AbstractBaseReportBackend):
@@ -18,8 +17,9 @@ class CompletionReportBackend(AbstractBaseReportBackend):
     Backend for Completion report.
     """
 
-    def __init__(self, **kwargs):
-        super(CompletionReportBackend, self).__init__(**kwargs)
+    def __init__(self, *args):
+        super(CompletionReportBackend, self).__init__(*args)
+
 
     def json_report_to_csv(self, json_report_data):
         """
@@ -81,13 +81,18 @@ class CompletionReportBackend(AbstractBaseReportBackend):
                 od.update(vertical)
                 csv_data.append(od)
 
-            self.create_csv_file(course, csv_data)
+            self.create_csv_file(
+                course,
+                csv_data,
+                self.spreadsheet_data.get('completion_sheet_id'),
+            )
             self.create_csv_file(
                 'general_course_data-{}'.format(course),
-                [general_course_data[key]for key in general_course_data]
+                [general_course_data[key]for key in general_course_data],
+                self.spreadsheet_data.get('general_course_sheet_id'),
             )
 
-    def create_csv_file(self, course, body_dict):
+    def create_csv_file(self, course, body_dict, spreadsheet_id):
         """
         Creates the csv file with the passed arguments, and then save it locally.
         """
@@ -113,8 +118,8 @@ class CompletionReportBackend(AbstractBaseReportBackend):
 
                     writer.writerow(row)
 
-            # self.upload_file_to_storage(course, path_file)
-            update_sheets_data(path_file, '16ZebqLGJ2JEEfSmJng8yDs36x_1mDATtxH4dmRaSqDU')
+            self.upload_file_to_storage(course, path_file)
+            update_sheets_data(path_file, spreadsheet_id)
 
 
     def upload_file_to_storage(self, course, path_file):
@@ -149,60 +154,3 @@ class CompletionReportBackend(AbstractBaseReportBackend):
             name = self._verify_name(name, data)
 
         return name
-
-
-def get_data_from_csv(file_path):
-    """
-    Reads the csv and returns its data as a list.
-
-    Args:
-        file_path: csv file path.
-    Returns:
-        List containing all rows in the csv file.
-    """
-    csv_data = []
-
-    if os.path.exists(file_path):
-        with open(file_path, 'r') as csvfile:
-            spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
-
-            for row in spamreader:
-                csv_data.append(row)
-    else:
-        print('The csv file does not exists. {}'.format(file_path))
-    return csv_data
-
-
-def update_sheets_data(file_path, spreadsheet_id,):
-    """
-    Updates the Google Sheet data.
-    """
-    csv_data = get_data_from_csv(file_path)
-
-    if not csv_data:
-        print('The report was not uploading to Google Sheets.')
-        return None
-
-    # Updates all the spreadsheet.
-    range_name = 'Sheet1'
-    value_input_option = 'USER_ENTERED'
-    body = {
-        'values': csv_data
-    }
-    api_service = get_sheets_api_service()
-
-    clear_result = api_service.values().clear(
-        spreadsheetId=spreadsheet_id,
-        range=range_name,
-    ).execute()
-
-    if clear_result:
-        update_result = api_service.values().update(
-            spreadsheetId=spreadsheet_id,
-            range=range_name,
-            valueInputOption=value_input_option,
-            body=body,
-        ).execute()
-
-        if update_result:
-            print('The report data was successfully updated on Google Sheets.')

@@ -9,9 +9,10 @@ class AbstractBaseReportBackend(object):
     Abstract Base Class for custom Proversity's reports.
     """
     __metaclass__ = abc.ABCMeta
+    spreadsheet_data = []
 
-    def __init__(self, **kwargs):
-        pass
+    def __init__(self, spreadsheet_data):
+        self.spreadsheet_data = spreadsheet_data
 
 
     @abc.abstractmethod
@@ -23,7 +24,7 @@ class AbstractBaseReportBackend(object):
 
 
     @abc.abstractmethod
-    def create_csv_file(self, file_name, body_dict, headers):
+    def create_csv_file(self, file_name, body_dict, headers, spreadsheet_id):
         """
         Creates the csv file with the passed arguments, and then save it locally.
         """
