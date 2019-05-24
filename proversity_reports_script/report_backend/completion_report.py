@@ -1,9 +1,15 @@
-from .base import AbstractBaseReportBackend
+"""
+Report backend for completion report.
+"""
 import csv
 import os
-import boto3
-from datetime import datetime
 from collections import OrderedDict
+from datetime import datetime
+
+import boto3
+
+from proversity_reports_script.report_backend.base import \
+    AbstractBaseReportBackend
 
 
 class CompletionReportBackend(AbstractBaseReportBackend):
@@ -14,7 +20,7 @@ class CompletionReportBackend(AbstractBaseReportBackend):
     def __init__(self, **kwargs):
         super(CompletionReportBackend, self).__init__(**kwargs)
 
-    def json_report_to_csv(self, json_report_data={}):
+    def json_report_to_csv(self, json_report_data):
         """
         Process json data to convert into csv format.
         """

@@ -4,7 +4,7 @@ Main module for additional proversity reports.
 from argparse import ArgumentParser
 import os
 
-from request_report import init_report  # pylint: disable=relative-import
+from proversity_reports_script.request_report import init_report  # pylint: disable=relative-import
 
 
 def main():

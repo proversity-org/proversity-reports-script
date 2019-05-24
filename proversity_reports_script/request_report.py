@@ -7,7 +7,7 @@ from time import sleep
 
 import requests
 
-from get_settings import get_settings  # pylint: disable=relative-import
+from proversity_reports_script.get_settings import get_settings  # pylint: disable=relative-import
 
 SETTINGS = {}
 report_backend = None
