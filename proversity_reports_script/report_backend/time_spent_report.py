@@ -80,7 +80,7 @@ class TimeSpentReportBackend(AbstractBaseReportBackend):
             for row in body_dict:
                 writer.writerow(row)
 
-        # self.upload_file_to_storage(file_name, path_file)
+        self.upload_file_to_storage(file_name, path_file)
 
 
     def upload_file_to_storage(self, course, path_file):
