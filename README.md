@@ -44,3 +44,10 @@ The configuration file must be in json format. e.g.
 ## Running
 
 python3 ./fetch_report.py --report "supported-report-name" --config-file "path-to-config-file"
+
+## Get Goolge oAuth credentials
+
+This command creates a new file called "google-oauth-credentials.json" containing the
+authorized Google oAuth credentials. (token)
+
+python3 ./get_google_oauth_permissions.py --config-file "path-to-config-file"

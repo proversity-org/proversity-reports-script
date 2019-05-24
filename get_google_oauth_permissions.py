@@ -1,10 +1,10 @@
 """
-This file is intented to get the Google oAuth permissions,
+This file is intended to get the Google oAuth permissions,
 in order to use the Google Sheet API.
 
-This file must to be run on local machine with access to
+This file must be run on local machine with access to
 an browser window, since this command opens a new browser tab to
-get the user consent for the Google user.
+get the user consent from the Google user.
 
 This is a one time operation to give those user permission to the
 provided Google oAuth credentials (client-id and client-secret).
@@ -15,7 +15,7 @@ import os
 
 from google_auth_oauthlib.flow import InstalledAppFlow
 
-from .get_settings import get_settings  # pylint: disable=relative-import
+from proversity_reports_script.get_settings import get_settings
 
 # SCOPE for read, create, delete and update Google Spreadsheets data.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
@@ -47,6 +47,7 @@ def main():
             google_oauth_credentials,
             SCOPES
         )
+
         credentials = flow.run_local_server()
 
         if not credentials:
