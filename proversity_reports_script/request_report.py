@@ -22,7 +22,7 @@ def init_report(report_name):
     """
     global report_backend
     global SETTINGS
-    SETTINGS = get_settings()
+    SETTINGS = get_settings(should_set_environment_settings=True)
 
     if not report_name in SETTINGS.get('SUPPORTED_REPORTS', []):
         print('Report is not suported.')

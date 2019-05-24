@@ -10,6 +10,7 @@ import boto3
 
 from proversity_reports_script.report_backend.base import \
     AbstractBaseReportBackend
+from proversity_reports_script.google_apis.sheets_api import get_sheets_api_service
 
 
 class CompletionReportBackend(AbstractBaseReportBackend):
@@ -112,7 +113,9 @@ class CompletionReportBackend(AbstractBaseReportBackend):
 
                     writer.writerow(row)
 
-            self.upload_file_to_storage(course, path_file)
+            # self.upload_file_to_storage(course, path_file)
+            update_sheets_data(path_file, '16ZebqLGJ2JEEfSmJng8yDs36x_1mDATtxH4dmRaSqDU')
+
 
     def upload_file_to_storage(self, course, path_file):
         """
@@ -130,6 +133,7 @@ class CompletionReportBackend(AbstractBaseReportBackend):
             )
         )
 
+
     def _verify_name(self, name, data):
         """
         This verifies if the name is already in use and generates a new one.
@@ -145,3 +149,60 @@ class CompletionReportBackend(AbstractBaseReportBackend):
             name = self._verify_name(name, data)
 
         return name
+
+
+def get_data_from_csv(file_path):
+    """
+    Reads the csv and returns its data as a list.
+
+    Args:
+        file_path: csv file path.
+    Returns:
+        List containing all rows in the csv file.
+    """
+    csv_data = []
+
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as csvfile:
+            spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+
+            for row in spamreader:
+                csv_data.append(row)
+    else:
+        print('The csv file does not exists. {}'.format(file_path))
+    return csv_data
+
+
+def update_sheets_data(file_path, spreadsheet_id,):
+    """
+    Updates the Google Sheet data.
+    """
+    csv_data = get_data_from_csv(file_path)
+
+    if not csv_data:
+        print('The report was not uploading to Google Sheets.')
+        return None
+
+    # Updates all the spreadsheet.
+    range_name = 'Sheet1'
+    value_input_option = 'USER_ENTERED'
+    body = {
+        'values': csv_data
+    }
+    api_service = get_sheets_api_service()
+
+    clear_result = api_service.values().clear(
+        spreadsheetId=spreadsheet_id,
+        range=range_name,
+    ).execute()
+
+    if clear_result:
+        update_result = api_service.values().update(
+            spreadsheetId=spreadsheet_id,
+            range=range_name,
+            valueInputOption=value_input_option,
+            body=body,
+        ).execute()
+
+        if update_result:
+            print('The report data was successfully updated on Google Sheets.')
