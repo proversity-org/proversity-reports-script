@@ -1,11 +1,11 @@
 """
-Main module to get config settings from a file.
+Main module to get config settings from the config json file.
 """
 import json
 import os
 
 
-def get_settings():
+def get_settings(should_set_environment_settings):
     """
     Returns and set environment settings in order to use them,
     during the report fecth and generation.
@@ -24,7 +24,9 @@ def get_settings():
 
     try:
         settings = json.loads(config_data)
-        set_environment_settings(settings)
+
+        if should_set_environment_settings:
+            set_environment_settings(settings)
     except ValueError as json_error:
         print(json_error.message)
         quit()

@@ -8,8 +8,8 @@ from datetime import datetime
 
 import boto3
 
-from proversity_reports_script.report_backend.base import \
-    AbstractBaseReportBackend
+from proversity_reports_script.google_apis.sheets_api import update_sheets_data
+from proversity_reports_script.report_backend.base import AbstractBaseReportBackend
 
 
 class CompletionReportBackend(AbstractBaseReportBackend):
@@ -17,8 +17,8 @@ class CompletionReportBackend(AbstractBaseReportBackend):
     Backend for Completion report.
     """
 
-    def __init__(self, **kwargs):
-        super(CompletionReportBackend, self).__init__(**kwargs)
+    def __init__(self, *args):
+        super(CompletionReportBackend, self).__init__(*args)
 
     def json_report_to_csv(self, json_report_data):
         """
@@ -32,11 +32,11 @@ class CompletionReportBackend(AbstractBaseReportBackend):
 
         course_list = report_data.keys()
 
-        general_course_data = {}
 
         for course in course_list:
             course_data = report_data.get(course, [])
             csv_data = []
+            general_course_data = {}
 
             for user in course_data:
                 username = user.get('username', '')
@@ -80,13 +80,18 @@ class CompletionReportBackend(AbstractBaseReportBackend):
                 od.update(vertical)
                 csv_data.append(od)
 
-            self.create_csv_file(course, csv_data)
+            self.create_csv_file(
+                course,
+                csv_data,
+                self.spreadsheet_data.get('completion_sheet_id_{}'.format(course)),
+            )
             self.create_csv_file(
                 'general_course_data-{}'.format(course),
-                [general_course_data[key]for key in general_course_data]
+                [general_course_data[key]for key in general_course_data],
+                self.spreadsheet_data.get('general_course_sheet_id_{}'.format(course)),
             )
 
-    def create_csv_file(self, course, body_dict):
+    def create_csv_file(self, course, body_dict, spreadsheet_id):
         """
         Creates the csv file with the passed arguments, and then save it locally.
         """
@@ -113,6 +118,7 @@ class CompletionReportBackend(AbstractBaseReportBackend):
                     writer.writerow(row)
 
             self.upload_file_to_storage(course, path_file)
+            update_sheets_data(path_file, spreadsheet_id)
 
     def upload_file_to_storage(self, course, path_file):
         """
