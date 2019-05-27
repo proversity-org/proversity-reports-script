@@ -40,7 +40,10 @@ The configuration file must be in json format. e.g.
         },
         "TIME_SPENT_REPORT": {
             "REPORT_URL": "path-to-report-generation-url",
-            "BACKEND_REPORT": "absolute-path-to-report-backend-module:report-backend-class-name"
+            "BACKEND_REPORT": "absolute-path-to-report-backend-module:report-backend-class-name",
+            "SPREADSHEET_DATA": {
+                "time_spent_sheet_id_<course_id>": "Spreadsheet id for time spent report."
+            }
         },
         "Add a new key in uppercase according to the new SUPPORTED_REPORTS value.
         The new key must have the keys REPORT_URL and BACKEND_REPORT."
