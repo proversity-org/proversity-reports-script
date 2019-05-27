@@ -20,7 +20,6 @@ class CompletionReportBackend(AbstractBaseReportBackend):
     def __init__(self, *args):
         super(CompletionReportBackend, self).__init__(*args)
 
-
     def json_report_to_csv(self, json_report_data):
         """
         Process json data to convert into csv format.
@@ -33,11 +32,11 @@ class CompletionReportBackend(AbstractBaseReportBackend):
 
         course_list = report_data.keys()
 
-        general_course_data = {}
 
         for course in course_list:
             course_data = report_data.get(course, [])
             csv_data = []
+            general_course_data = {}
 
             for user in course_data:
                 username = user.get('username', '')
@@ -84,12 +83,12 @@ class CompletionReportBackend(AbstractBaseReportBackend):
             self.create_csv_file(
                 course,
                 csv_data,
-                self.spreadsheet_data.get('completion_sheet_id'),
+                self.spreadsheet_data.get('completion_sheet_id_{}'.format(course)),
             )
             self.create_csv_file(
                 'general_course_data-{}'.format(course),
                 [general_course_data[key]for key in general_course_data],
-                self.spreadsheet_data.get('general_course_sheet_id'),
+                self.spreadsheet_data.get('general_course_sheet_id_{}'.format(course)),
             )
 
     def create_csv_file(self, course, body_dict, spreadsheet_id):
@@ -121,7 +120,6 @@ class CompletionReportBackend(AbstractBaseReportBackend):
             self.upload_file_to_storage(course, path_file)
             update_sheets_data(path_file, spreadsheet_id)
 
-
     def upload_file_to_storage(self, course, path_file):
         """
         Uploads the csv report, to S3 storage.
@@ -137,7 +135,6 @@ class CompletionReportBackend(AbstractBaseReportBackend):
                 date=now
             )
         )
-
 
     def _verify_name(self, name, data):
         """

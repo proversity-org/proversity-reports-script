@@ -5,7 +5,7 @@ import json
 import os
 
 
-def get_settings(should_set_environment_settings=False):
+def get_settings(should_set_environment_settings):
     """
     Returns and set environment settings in order to use them,
     during the report fecth and generation.

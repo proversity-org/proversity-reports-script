@@ -10,7 +10,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-from get_google_oauth_permissions import credentials_to_dict
+from get_google_oauth_permissions import store_credentials_as_dict
 
 
 def get_sheets_api_service():
@@ -38,7 +38,7 @@ def get_sheets_api_service():
     try:
         oauth_credentials = Credentials(**google_oauth_credentials)
     except GoogleAuthError as goo_error:
-        print('Unable to create the Credentials object. {}'.format(goo_error.message))
+        print('Unable to create the Credentials object. {}'.format(goo_error))
         return None
 
     if not oauth_credentials or not oauth_credentials.valid:
@@ -48,25 +48,19 @@ def get_sheets_api_service():
             print('Google oAuth credentials are being updated.')
 
             # Save the credentials for the next run.
-            credentials_data = credentials_to_dict(oauth_credentials)
-
-            with open(oauth_file_path, 'w') as json_file:
-                json.dump(credentials_data, json_file, sort_keys=True)
-                print('Google oAuth credentials were updated.')
+            store_credentials_as_dict(oauth_file_path, oauth_credentials)
+            print('Google oAuth credentials were updated.')
         else:
-            print('The credentials cannot be obtained or token has expired.')
+            print('The credentials cannot be obtained or are not valid.')
             return None
-
-    sheet_api = None
 
     try:
         sheets_service = build('sheets', 'v4', credentials=oauth_credentials)
-        sheet_api = sheets_service.spreadsheets()
+        return sheets_service.spreadsheets()
     except Exception as error:  # pylint: disable=broad-except
-        print('Unable to build or obtain the Google Sheets service. {}'.format(error.message))
-        return None
+        print('Unable to build or obtain the Google Sheets service. {}'.format(error))
 
-    return sheet_api
+    return None
 
 
 def get_settings_from_file(file_path):
@@ -94,24 +88,24 @@ def get_settings_from_file(file_path):
 
 def get_data_from_csv(file_path):
     """
-    Reads the csv and returns its data as a list.
+    Reads the csv and yields its row data.
 
     Args:
         file_path: csv file path.
     Returns:
-        List containing all rows in the csv file.
+        Yields each row in the csv file.
+        Yields an empty list if the csv file does not exists.
     """
-    csv_data = []
 
     if os.path.exists(file_path):
         with open(file_path, 'r') as csvfile:
-            spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+            report_reader = csv.reader(csvfile, delimiter=',', quotechar='|')
 
-            for row in spamreader:
-                csv_data.append(row)
+            for row in report_reader:
+                yield row
     else:
         print('The csv file does not exists. {}'.format(file_path))
-    return csv_data
+        yield []
 
 
 def update_sheets_data(file_path, spreadsheet_id):
@@ -126,7 +120,7 @@ def update_sheets_data(file_path, spreadsheet_id):
     Returns:
         None: if there is a problem updating the report.
     """
-    csv_data = get_data_from_csv(file_path)
+    csv_data = list(get_data_from_csv(file_path))
 
     if not csv_data:
         print('The report data is empty and it was not updated on Google Sheets.')
@@ -160,8 +154,8 @@ def update_sheets_data(file_path, spreadsheet_id):
             valueInputOption=value_input_option,
             body=body,
         ).execute()
-    except Exception as error:
-        print('There was an error updating report on Google Sheet. {}'.format(error.message))
+    except Exception as error:  # pylint: disable=broad-except
+        print('There was an error updating report on Google Sheet. {}'.format(error))
         return None
 
     print('The report data was successfully updated on Google Sheets.')

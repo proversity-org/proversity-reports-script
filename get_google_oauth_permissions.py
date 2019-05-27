@@ -53,23 +53,18 @@ def main():
         if not credentials:
             raise GoogleApiCredentialsError('Credentials object is empty.')
 
-        credentials_data = credentials_to_dict(credentials)
-
-        with open('google-oauth-credentials.json', 'w') as json_file:
-            json.dump(credentials_data, json_file, sort_keys=True)
-
+        store_credentials_as_dict('google-oauth-credentials.json', credentials)
     except Exception as error:
         raise error
 
 
-def credentials_to_dict(credentials):
+def store_credentials_as_dict(file_name, credentials):
     """
-    Returns a dict object with the required information.
+    Saves a file containing the dict object as json with the required information.
 
     Args:
+        file_name: File name to store the credentials.
         credentials: google.oauth2.credentials.Credentials Object.
-    Returns:
-        Dict object containing the required data such as token, refresh_token...
     Raises:
         GoogleApiCredentialsError: When some of the required fields is missing from the credentials object.
     """
@@ -86,7 +81,8 @@ def credentials_to_dict(credentials):
             field: credential_field
         })
 
-    return required_data
+    with open(file_name, 'w') as json_file:
+        json.dump(required_data, json_file, sort_keys=True)
 
 
 class GoogleApiCredentialsError(Exception):
