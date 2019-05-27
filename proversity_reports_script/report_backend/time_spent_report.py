@@ -7,6 +7,7 @@ import os
 
 import boto3
 
+from proversity_reports_script.google_apis.sheets_api import update_sheets_data
 from proversity_reports_script.report_backend.base import AbstractBaseReportBackend
 
 
@@ -15,8 +16,8 @@ class TimeSpentReportBackend(AbstractBaseReportBackend):
     Backend for time spent report.
     """
 
-    def __init__(self, **kwargs):
-        super(TimeSpentReportBackend, self).__init__(**kwargs)
+    def __init__(self, *args):
+        super(TimeSpentReportBackend, self).__init__(*args)
 
 
     def json_report_to_csv(self, json_report_data):
@@ -55,10 +56,15 @@ class TimeSpentReportBackend(AbstractBaseReportBackend):
                     'page_views',
                 ]
 
-                self.create_csv_file(file_name, subsection_data, report_csv_headers)
+                self.create_csv_file(
+                    file_name,
+                    subsection_data,
+                    report_csv_headers,
+                    self.spreadsheet_data.get('time_spent_sheet_id_{}'.format(course_key))
+                )
 
 
-    def create_csv_file(self, file_name, body_dict, headers):
+    def create_csv_file(self, file_name, body_dict, headers, spreadsheet_id):
         """
         Creates the csv file with the passed arguments, and then save it locally.
 
@@ -81,6 +87,7 @@ class TimeSpentReportBackend(AbstractBaseReportBackend):
                 writer.writerow(row)
 
         self.upload_file_to_storage(file_name, path_file)
+        update_sheets_data(path_file, spreadsheet_id)
 
 
     def upload_file_to_storage(self, course, path_file):
