@@ -7,6 +7,7 @@ import os
 
 import boto3
 
+from proversity_reports_script.google_apis.sheets_api import update_sheets_data
 from proversity_reports_script.report_backend.base import AbstractBaseReportBackend
 
 
@@ -15,8 +16,8 @@ class LastPageAccessedReportBackend(AbstractBaseReportBackend):
     Backend for last time report accessed.
     """
 
-    def __init__(self, **kwargs):
-        super(LastPageAccessedReportBackend, self).__init__(**kwargs)
+    def __init__(self, *args):
+        super(LastPageAccessedReportBackend, self).__init__(*args)
 
 
     def json_report_to_csv(self, json_report_data):
@@ -43,7 +44,12 @@ class LastPageAccessedReportBackend(AbstractBaseReportBackend):
                 ]
                 file_name = '{}-table'.format(course)
 
-                self.create_csv_file(file_name, last_page_report, last_page_report_headers)
+                self.create_csv_file(
+                    file_name,
+                    last_page_report,
+                    last_page_report_headers,
+                    self.spreadsheet_data.get('last_page_accessed_table_{}'.format(course)),
+                )
 
         if report_data.get('exit_count_data'):
             exit_count_data = report_data.get('exit_count_data')
@@ -56,10 +62,15 @@ class LastPageAccessedReportBackend(AbstractBaseReportBackend):
                 ]
                 file_name = '{}-bar-chart'.format(course)
 
-                self.create_csv_file(file_name, exit_count_report_data, exit_count_report_headers)
+                self.create_csv_file(
+                    file_name,
+                    exit_count_report_data,
+                    exit_count_report_headers,
+                    self.spreadsheet_data.get('last_page_accessed_bar_char_{}'.format(course))
+                )
 
 
-    def create_csv_file(self, file_name, body_dict, headers):
+    def create_csv_file(self, file_name, body_dict, headers, spreadsheet_id):
         """
         Creates the csv file with the passed arguments, and then save it locally.
         """
@@ -77,6 +88,7 @@ class LastPageAccessedReportBackend(AbstractBaseReportBackend):
                 writer.writerow(row)
 
         self.upload_file_to_storage(file_name, path_file)
+        update_sheets_data(path_file, spreadsheet_id)
 
 
     def upload_file_to_storage(self, course, path_file):
