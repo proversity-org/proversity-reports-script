@@ -33,6 +33,10 @@ The configuration file must be in json format. e.g.
         "LAST_PAGE_ACCESSED": {
             "REPORT_URL": "path-to-report-generation-url",
             "BACKEND_REPORT": "absolute-path-to-report-backend-module:report-backend-class-name"
+            "SPREADSHEET_DATA": {
+                 "last_page_accessed_table_<course_id>": "Spreadsheet id for last page accessed report.",
+                "last_page_accessed_bar_char_<course_id>": "Spreadsheet id for last page accessed report.",
+            }
         },
         "TIME_SPENT_REPORT": {
             "REPORT_URL": "path-to-report-generation-url",
