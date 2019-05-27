@@ -41,18 +41,21 @@ def get_sheets_api_service():
         print('Unable to create the Credentials object. {}'.format(goo_error))
         return None
 
-    if not oauth_credentials or not oauth_credentials.valid:
-        if oauth_credentials and oauth_credentials.expired and oauth_credentials.refresh_token:
-            oauth_credentials.refresh(Request())
+    if (oauth_credentials and
+            not oauth_credentials.valid
+            and oauth_credentials.expired
+            and oauth_credentials.refresh_token):
 
-            print('Google oAuth credentials are being updated.')
+        oauth_credentials.refresh(Request())
 
-            # Save the credentials for the next run.
-            store_credentials_as_dict(oauth_file_path, oauth_credentials)
-            print('Google oAuth credentials were updated.')
-        else:
-            print('The credentials cannot be obtained or are not valid.')
-            return None
+        print('Google oAuth credentials are being updated.')
+
+        # Save the credentials for the next run.
+        store_credentials_as_dict(oauth_file_path, oauth_credentials)
+        print('Google oAuth credentials were updated.')
+    elif not oauth_credentials:
+        print('The credentials cannot be obtained or are not valid.')
+        return None
 
     try:
         sheets_service = build('sheets', 'v4', credentials=oauth_credentials)
