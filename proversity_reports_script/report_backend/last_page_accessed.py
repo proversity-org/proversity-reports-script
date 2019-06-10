@@ -40,7 +40,6 @@ class LastPageAccessedReportBackend(AbstractBaseReportBackend):
                     'user_teams',
                     'last_time_accessed',
                     'last_page_viewed',
-                    'user_role',
                 ]
                 file_name = '{}-table'.format(course)
 
@@ -59,6 +58,7 @@ class LastPageAccessedReportBackend(AbstractBaseReportBackend):
                     'page_title',
                     'exit_count',
                     'position',
+                    'section',
                 ]
                 file_name = '{}-bar-chart'.format(course)
 
@@ -122,7 +122,6 @@ def last_page_accessed_report(course, last_page_data):
         username = user.get('username', '')
         last_time_accessed = user.get('last_time_accessed', '')
         last_page_viewed = user.get('last_page_viewed', '')
-        user_role = user.get('user_role', '')
         user_cohort = user.get('user_cohort', '')
         user_teams = user.get('user_teams', '')
 
@@ -132,7 +131,6 @@ def last_page_accessed_report(course, last_page_data):
             'user_teams': user_teams,
             'last_time_accessed': last_time_accessed,
             'last_page_viewed': last_page_viewed,
-            'user_role': user_role,
         }
         csv_data.append(dict_writer_data)
 
@@ -153,11 +151,13 @@ def exit_count_report(course, exit_count_data):
         page_title = block.get('page_title', '')
         exit_count = block.get('exit_count', '')
         vertical_position = block.get('vertical_position', '')
+        chapter_name = block.get('chapter_name', '')
 
         dict_writer_data = {
             'page_title': page_title,
             'exit_count': exit_count,
             'position': vertical_position,
+            'section': chapter_name,
         }
         csv_data.append(dict_writer_data)
 
