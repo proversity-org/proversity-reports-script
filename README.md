@@ -69,7 +69,7 @@ GOOGLE_OAUTH_CREDENTIALS came from downloaded Google oAuth credentials in json f
 
 ## Running
 
-python3 ./fetch_report.py --report "supported-report-name" --config-file "path-to-config-file"
+python3 ./fetch_report.py --report "supported-report-name" --config-file "path-to-config-file" --oauth-config-file "path-to-google-oauth-credentials-file"
 
 ## Get Goolge oAuth credentials
 
