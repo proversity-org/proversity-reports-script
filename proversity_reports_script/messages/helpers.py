@@ -1,6 +1,7 @@
 """
 Helper module with utilities to generate the content of a message.
 """
+import base64
 import os
 import pandas as pd
 import matplotlib
@@ -21,7 +22,7 @@ def generate_graph(**kwargs):
 
     try:
         script_dir = os.path.dirname(__file__)
-        rel_path = "images/output.png"
+        rel_path = "output.png"
         fig, axes = plt.subplots(
             nrows=1,
             ncols=len(kwargs["subplots"]),
@@ -72,7 +73,26 @@ def generate_student_subplots(user_record, graph_confs):
                 "title": graph["graph_title"],
                 "palette": "Blues_d",
             })
-        except Exception as identifier:
-            raise identifier
+        except Exception:
+            return None
 
     return subplots_data
+
+
+def get_graph():
+    """
+    Get the image from the folder and return its string representation.
+    """
+    encoded_string = None
+    try:
+        script_dir = os.path.dirname(__file__)
+        rel_path = "output.png"
+        abs_file_path = os.path.join(script_dir, rel_path)
+        with open(abs_file_path, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode('ascii')
+        if os.path.exists(abs_file_path):
+            os.remove(abs_file_path)
+    except Exception as identifier:
+        return None
+    else:
+        return encoded_string
