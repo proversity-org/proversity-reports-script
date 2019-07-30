@@ -118,9 +118,9 @@ def polling_report_data(report_data_url):
 
     print('Got it...')
 
-    spreadsheet_list = report_settings.get('SPREADSHEET_DATA', {})
-    report_builder = report_backend(spreadsheet_list)
-    report_builder.json_report_to_csv(report_data)
+    extra_data = report_settings.get('EXTRA_DATA', {})
+    report_builder = report_backend(extra_data=extra_data)
+    report_builder.generate_report(report_data)
 
 
 def fetch_data_report(report_data_url):

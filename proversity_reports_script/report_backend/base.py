@@ -37,3 +37,10 @@ class AbstractBaseReportBackend(object):
         Uploads the csv report, to the implemented storage.
         """
         raise NotImplementedError()
+
+    @abc.abstractmethod
+    def generate_report(self, json_report_data):
+        """
+        Main logic to generate the report.
+        """
+        raise NotImplementedError()
