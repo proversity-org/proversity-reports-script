@@ -1,5 +1,5 @@
 """
-Report backend for completion report.
+Report backend for learning tracker report.
 """
 import csv
 
@@ -10,7 +10,7 @@ from proversity_reports_script.report_backend.base import AbstractBaseReportBack
 
 class LearningTrackerReportBackend(AbstractBaseReportBackend):
     """
-    Backend for Completion report.
+    Backend for learning tracker report.
     """
 
     def __init__(self, *args, **kwargs):
