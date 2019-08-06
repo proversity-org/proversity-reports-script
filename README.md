@@ -45,6 +45,32 @@ The configuration file must be in json format. e.g.
                 "time_spent_sheet_id_<course_id>": "Spreadsheet id for time spent report."
             }
         },
+        "LEARNING-TRACKER-REPORT":{
+            "REPORT_URL": "/proversity-reports/api/v0/generate-learning-tracker-report",
+            "BACKEND_REPORT": "proversity_reports_script.report_backend.learning_tracker_report:LearningTrackerReportBackend",
+            "EXTRA_DATA":{
+                "AWS_DATA": {
+                    "amazon_bucket": "pearson-prod",
+                    "file_prefix": "daily-edx-log-files/"
+                }
+        }
+        },
+        "ENROLLMENT-REPORT":{
+            "REPORT_URL": "/proversity-reports/api/v0/generate-enrollment-report",
+            "BACKEND_REPORT": "proversity_reports_script.report_backend.enrollment_report:EnrollmentReportBackend",
+            "EXTRA_DATA":{
+                "SALESFORCE": {
+                    "AUTHENTICATION_URL": "https://test.salesforce.com/services/oauth2/token",
+                    "CLIENT_ID": "3MVG91LYYD8O4krRFZk502yUZjhPqZInrqaGKFWn7Ur9.7kaRASjfWN6MtawBaayrdPwKFBrw3uzpFl91E1ib",
+                    "CLIENT_SECRET": "B108885647402450D21BC2EDF6FEBF7E03D01944374EF4E046073D55A08E2370",
+                    "PASSWORD": "your-password",
+                    "SECURITY_TOKEN": "security-token",
+                    "USERNAME": "your-username@pearson.com"
+                },
+                "OPEN_EDX_OAUTH_TOKEN": "",
+                "STUDENT_ACCOUNT_API_URL": ""
+            }
+        },
         "Add a new key in uppercase according to the new SUPPORTED_REPORTS value.
         The new key must have the keys REPORT_URL and BACKEND_REPORT."
         "COURSES": [
