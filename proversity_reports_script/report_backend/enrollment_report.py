@@ -203,6 +203,10 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
 
         salesforce_url = salesforce_data.get('AUTHENTICATION_URL', '')
 
+        if not salesforce_url:
+            print('Salesforce AUTHENTICATION_URL was not provided.')
+            exit()
+
         request_data = {
             'grant_type': 'password',
             'client_id': salesforce_data.get('CLIENT_ID', ''),
