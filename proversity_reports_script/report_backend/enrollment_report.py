@@ -91,13 +91,19 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
         batch = []
 
         for index, user in enumerate(course_data, 1):
-            # If the user has already a contact id,
-            # it's not neccesary to request the creation again.
-            if user.get('contact_id', ''):
-                continue
+            contact_id = user.get('contact_id', '')
 
             # If the user doesn't have a user_id, the creation cannot be possible.
             if not user.get('user_id', ''):
+                continue
+
+            # If the user has already a contact id,
+            # it's not neccesary to request the creation again.
+            if contact_id and index == len(course_data):
+                salesforce_data.append(batch)
+                batch = []
+                continue
+            elif contact_id:
                 continue
 
             first_name, last_name = get_first_and_last_name(user.get('full_name', ''))
