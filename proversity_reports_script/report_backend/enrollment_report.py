@@ -31,6 +31,7 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
         attempts to create the contact id record in the platform.
         """
         print('Processing enrollment report...')
+
         for course, course_data in iter(json_report_data.get('result', {}).items()):
             salesforce_data = self._get_salesforce_data(course, course_data)
             salesforce_result = self._create_saleforce_enrollments(salesforce_data)
@@ -149,6 +150,7 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
             ),
             'Content-Type': 'application/json',
         })
+
         print('Creating enrollments on Salesforce...')
 
         if not api_url:
@@ -166,6 +168,8 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
 
             if api_response.ok:
                 salesforce_result.append(api_response.json())
+            else:
+                print('There was an error calling the Salesforce API: ', api_response.text)
 
         return salesforce_result
 
@@ -182,6 +186,7 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
             }
         """
         print('Getting Salesforce token deatils...')
+
         salesforce_data = self.extra_data.get('SALESFORCE', {})
 
         if not salesforce_data:
@@ -241,7 +246,9 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
                 })
 
             return final_user_data
+
         print('Creating records in the platform...')
+
         request_session = requests.Session()
         api_url = '{}{}'.format(
             self.settings.get('LMS_URL', ''),
@@ -264,4 +271,4 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
             response = request_session.post(api_url, data=request_data)
 
             if not response.ok:
-                print(response.text)
+                print('There was an error calling the Platform API: ', response.text)
