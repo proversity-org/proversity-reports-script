@@ -118,9 +118,7 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
                 'Type_Hidden': self.extra_data.get('TYPE_HIDDEN', ''),
                 'Program_of_Interest': self.extra_data.get('PROGRAM_OF_INTEREST', ''),
                 'Intake_of_Intent': user.get('intake_of_intent', ''),
-                'Lead_Source': DEFAULT_LEAD_SOURCE,
-                'Secondary_Source': '',
-                'Tertiary_Source': '',
+                'Lead_Source': self.extra_data.get('LEAD_SOURCE', DEFAULT_LEAD_SOURCE),
                 'Program_Code': course,
                 'Drupal_ID': user.get('user_id', ''),
             }
@@ -144,9 +142,18 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
         """
         request_session = requests.Session()
         salesforce_details = self._get_salesforce_details()
+        enrollment_api_url = self.extra_data.get('SALESFORCE', {}).get(
+            'SALESFORCE_API_ENROLLMENT_URL',
+            ''
+        )
+
+        if not enrollment_api_url:
+            print('SALESFORCE_API_ENROLLMENT_URL was not provided.')
+            exit()
+
         api_url = '{}{}'.format(
             salesforce_details.get('instance_url', ''),
-            self.extra_data.get('SALESFORCE', {}).get('SALESFORCE_API_ENROLLMENT_URL', ''),
+            enrollment_api_url,
         )
 
         request_session.headers.update({
@@ -154,23 +161,18 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
                 salesforce_details.get('token_type', ''),
                 salesforce_details.get('access_token', ''),
             ),
-            'Content-Type': 'application/json',
         })
 
         print('Creating enrollments on Salesforce...')
 
-        if not api_url:
-            print('SALESFORCE_API_ENROLLMENT_URL was not provided.')
-            exit()
-
         salesforce_result = []
 
         for enrollments in enrollment_data:
-            request_data = json.dumps({
+            request_data = {
                 'enrollments': enrollments,
-            })
+            }
 
-            api_response = request_session.post(api_url, data=request_data)
+            api_response = request_session.post(api_url, json=request_data)
 
             if api_response.ok:
                 salesforce_result.append(api_response.json())
@@ -256,25 +258,27 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
         print('Creating records in the platform...')
 
         request_session = requests.Session()
-        api_url = '{}{}'.format(
-            self.settings.get('LMS_URL', ''),
-            self.extra_data.get('CONTACT_ID_API_URL', '')
-        )
-        request_session.headers.update({
-            'Authorization': 'Bearer {}'.format(self.settings.get('OPEN_EDX_OAUTH_TOKEN', '')),
-            'Content-Type': 'application/json',
-        })
+        contact_id_api_url = self.extra_data.get('CONTACT_ID_API_URL', '')
 
-        if not api_url:
+        if not contact_id_api_url:
             print('CONTACT_ID_API_URL was not provided.')
             exit()
 
-        for data in users_data:
-            request_data = json.dumps({
-                'records': process_user_data(data),
-            })
+        api_url = '{}{}'.format(
+            self.settings.get('LMS_URL', ''),
+            contact_id_api_url,
+        )
 
-            response = request_session.post(api_url, data=request_data)
+        request_session.headers.update({
+            'Authorization': 'Bearer {}'.format(self.settings.get('OPEN_EDX_OAUTH_TOKEN', '')),
+        })
+
+        for data in users_data:
+            request_data = {
+                'records': process_user_data(data),
+            }
+
+            response = request_session.post(api_url, json=request_data)
 
             if not response.ok:
                 print('There was an error calling the Platform API: ', response.text)

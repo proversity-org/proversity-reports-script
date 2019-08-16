@@ -72,7 +72,8 @@ The configuration file must be in json format. e.g.
                 "COMPANY_NAME": "Custom field.",
                 "INSTITUTION_HIDDEN_PREFIX": "Custom field.",
                 "TYPE_HIDDEN": "Custom field.",
-                "PROGRAM_OF_INTEREST": "Custom field."
+                "PROGRAM_OF_INTEREST": "Custom field.",
+                "LEAD_SOURCE": "Custom field."
             }
         },
         "Add a new key in uppercase according to the new SUPPORTED_REPORTS value.
