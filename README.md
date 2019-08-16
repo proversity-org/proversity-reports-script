@@ -2,10 +2,10 @@
 
 ## Installation
 
-pip install pipenv
-python3 -m venv venv
-source venv/bin/activate
-pipenv install
+    pip install pipenv
+    python3 -m venv venv
+    source venv/bin/activate
+    pipenv install
 
 ## Configuration
 
@@ -60,15 +60,19 @@ The configuration file must be in json format. e.g.
             "BACKEND_REPORT": "proversity_reports_script.report_backend.enrollment_report:EnrollmentReportBackend",
             "EXTRA_DATA":{
                 "SALESFORCE": {
-                    "AUTHENTICATION_URL": "https://test.salesforce.com/services/oauth2/token",
-                    "CLIENT_ID": "3MVG91LYYD8O4krRFZk502yUZjhPqZInrqaGKFWn7Ur9.7kaRASjfWN6MtawBaayrdPwKFBrw3uzpFl91E1ib",
-                    "CLIENT_SECRET": "B108885647402450D21BC2EDF6FEBF7E03D01944374EF4E046073D55A08E2370",
-                    "PASSWORD": "your-password",
-                    "SECURITY_TOKEN": "security-token",
-                    "USERNAME": "your-username@pearson.com"
+                    "AUTHENTICATION_URL": "Salesforce instance URL.",
+                    "CLIENT_ID": "Salesforce client id.",
+                    "CLIENT_SECRET": "Salesforce client secret.",
+                    "PASSWORD": "Salesforce user password.",
+                    "SECURITY_TOKEN": "Salesforce user security token.",
+                    "USERNAME": "Salesforce user name."
+                    "SALESFORCE_API_ENROLLMENT_URL": "Salesforce enrollment API."
                 },
-                "OPEN_EDX_OAUTH_TOKEN": "",
-                "STUDENT_ACCOUNT_API_URL": ""
+                "CONTACT_ID_API_URL": "Contact id platform API URL.",
+                "COMPANY_NAME": "Custom field.",
+                "INSTITUTION_HIDDEN_PREFIX": "Custom field.",
+                "TYPE_HIDDEN": "Custom field.",
+                "PROGRAM_OF_INTEREST": "Custom field."
             }
         },
         "Add a new key in uppercase according to the new SUPPORTED_REPORTS value.
