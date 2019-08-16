@@ -2,7 +2,6 @@
 Report backend for enrollment report.
 """
 import json
-import six
 
 import requests
 
@@ -10,6 +9,7 @@ from proversity_reports_script.get_settings import get_settings
 from proversity_reports_script.report_backend.base import AbstractBaseReportBackend
 
 BATCH_SIZE = 15
+DEFAULT_LEAD_SOURCE = 'Salesforce'
 
 
 class EnrollmentReportBackend(AbstractBaseReportBackend):
@@ -30,7 +30,8 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
         Then, when the contact id is returned from Salesforce
         attempts to create the contact id record in the platform.
         """
-        for course, course_data in six.iteritems(json_report_data.get('result', [])):
+        print('Processing enrollment report...')
+        for course, course_data in iter(json_report_data.get('result', {}).items()):
             salesforce_data = self._get_salesforce_data(course, course_data)
             salesforce_result = self._create_saleforce_enrollments(salesforce_data)
             self._create_platform_users_contact_id(salesforce_result)
@@ -105,14 +106,14 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
                 'FirstName': first_name if first_name else username,
                 'LastName': last_name if last_name else username,
                 'Email': user.get('email', ''),
-                'Company': 'TNE',
-                'Institution_Hidden': 'TNE-IN-PPP',
-                'Type_Hidden': 'TNE',
-                'Program_of_Interest': 'ITPR-IN Shiny R',
-                'Intake_of_Intent': 'September 2019',
-                'Lead_Source': 'Salesforce',
-                'Secondary_Source': 'Test',
-                'Tertiary_Source': 'OpenEdX',
+                'Company': self.extra_data.get('COMPANY_NAME', ''),
+                'Institution_Hidden': self.extra_data.get('INSTITUTION_HIDDEN_PREFIX', ''),
+                'Type_Hidden': self.extra_data.get('TYPE_HIDDEN', ''),
+                'Program_of_Interest': self.extra_data.get('PROGRAM_OF_INTEREST', ''),
+                'Intake_of_Intent': user.get('intake_of_intent', ''),
+                'Lead_Source': DEFAULT_LEAD_SOURCE,
+                'Secondary_Source': '',
+                'Tertiary_Source': '',
                 'Program_Code': course,
                 'Drupal_ID': user.get('user_id', ''),
             }
@@ -148,6 +149,7 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
             ),
             'Content-Type': 'application/json',
         })
+        print('Creating enrollments on Salesforce...')
 
         if not api_url:
             print('SALESFORCE_API_ENROLLMENT_URL was not provided.')
@@ -179,6 +181,7 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
                 'token_type': Access token type.
             }
         """
+        print('Getting Salesforce token deatils...')
         salesforce_data = self.extra_data.get('SALESFORCE', {})
 
         if not salesforce_data:
@@ -238,7 +241,7 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
                 })
 
             return final_user_data
-
+        print('Creating records in the platform...')
         request_session = requests.Session()
         api_url = '{}{}'.format(
             self.settings.get('LMS_URL', ''),
