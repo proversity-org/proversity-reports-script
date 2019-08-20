@@ -2,10 +2,10 @@
 
 ## Installation
 
-pip install pipenv
-python3 -m venv venv
-source venv/bin/activate
-pipenv install
+    pip install pipenv
+    python3 -m venv venv
+    source venv/bin/activate
+    pipenv install
 
 ## Configuration
 
@@ -43,6 +43,37 @@ The configuration file must be in json format. e.g.
             "BACKEND_REPORT": "absolute-path-to-report-backend-module:report-backend-class-name",
             "SPREADSHEET_DATA": {
                 "time_spent_sheet_id_<course_id>": "Spreadsheet id for time spent report."
+            }
+        },
+        "LEARNING-TRACKER-REPORT":{
+            "REPORT_URL": "/proversity-reports/api/v0/generate-learning-tracker-report",
+            "BACKEND_REPORT": "proversity_reports_script.report_backend.learning_tracker_report:LearningTrackerReportBackend",
+            "EXTRA_DATA":{
+                "AWS_DATA": {
+                    "amazon_bucket": "pearson-prod",
+                    "file_prefix": "daily-edx-log-files/"
+                }
+        }
+        },
+        "ENROLLMENT-REPORT":{
+            "REPORT_URL": "/proversity-reports/api/v0/generate-enrollment-report",
+            "BACKEND_REPORT": "proversity_reports_script.report_backend.enrollment_report:EnrollmentReportBackend",
+            "EXTRA_DATA":{
+                "SALESFORCE": {
+                    "AUTHENTICATION_URL": "Salesforce instance URL.",
+                    "CLIENT_ID": "Salesforce client id.",
+                    "CLIENT_SECRET": "Salesforce client secret.",
+                    "PASSWORD": "Salesforce user password.",
+                    "SECURITY_TOKEN": "Salesforce user security token.",
+                    "USERNAME": "Salesforce user name."
+                    "SALESFORCE_API_ENROLLMENT_URL": "Salesforce enrollment API."
+                },
+                "CONTACT_ID_API_URL": "Contact id platform API URL.",
+                "COMPANY_NAME": "Custom field.",
+                "INSTITUTION_HIDDEN_PREFIX": "Custom field.",
+                "TYPE_HIDDEN": "Custom field.",
+                "PROGRAM_OF_INTEREST": "Custom field.",
+                "LEAD_SOURCE": "Custom field."
             }
         },
         "Add a new key in uppercase according to the new SUPPORTED_REPORTS value.
