@@ -16,8 +16,16 @@ class LastPageAccessedReportBackend(AbstractBaseReportBackend):
     Backend for last time report accessed.
     """
 
-    def __init__(self, *args):
-        super(LastPageAccessedReportBackend, self).__init__(*args)
+    def __init__(self, *args, **kwargs):
+        extra_data = kwargs.get('extra_data', {})
+        super(LastPageAccessedReportBackend, self).__init__(extra_data.get('SPREADSHEET_DATA', {}))
+
+
+    def generate_report(self, json_report_data):
+        """
+        Main logic to generate the report.
+        """
+        self.json_report_to_csv(json_report_data)
 
 
     def json_report_to_csv(self, json_report_data):

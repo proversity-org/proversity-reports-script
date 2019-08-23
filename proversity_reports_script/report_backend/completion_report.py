@@ -17,8 +17,15 @@ class CompletionReportBackend(AbstractBaseReportBackend):
     Backend for Completion report.
     """
 
-    def __init__(self, *args):
-        super(CompletionReportBackend, self).__init__(*args)
+    def __init__(self, *args, **kwargs):
+        extra_data = kwargs.get('extra_data', {})
+        super(CompletionReportBackend, self).__init__(extra_data.get('SPREADSHEET_DATA', {}))
+
+    def generate_report(self, json_report_data):
+        """
+        Main logic to generate the report.
+        """
+        self.json_report_to_csv(json_report_data)
 
     def json_report_to_csv(self, json_report_data):
         """
