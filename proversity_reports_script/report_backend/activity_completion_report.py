@@ -3,11 +3,9 @@ Acitivity completion report backend.
 """
 import csv
 import os
-import socket
 from datetime import datetime
 
 import boto3
-import paramiko
 
 from proversity_reports_script.report_backend.base import AbstractBaseReportBackend
 
@@ -20,8 +18,7 @@ class ActivityCompletionReportBackend(AbstractBaseReportBackend):
     def __init__(self, *args, **kwargs):
         extra_data = kwargs.get('extra_data', {})
         self.bucket_name = extra_data.get('BUCKET_NAME', '')
-        self.upload_to_ftp = extra_data.get('UPLOAD_TO_FTP', '')
-        self.ftp_credentials = extra_data.get('FTP_ACCOUNT_CREDENTIALS', {})
+
         super(ActivityCompletionReportBackend, self).__init__(extra_data.get('SPREADSHEET_DATA', {}))
 
 
@@ -69,9 +66,6 @@ class ActivityCompletionReportBackend(AbstractBaseReportBackend):
 
         self.upload_file_to_storage(file_name, path_file)
 
-        if self.upload_to_ftp:
-            self.upload_to_ftp_storage(file_name, path_file)
-
 
     def upload_file_to_storage(self, course, path_file):
         """
@@ -83,58 +77,11 @@ class ActivityCompletionReportBackend(AbstractBaseReportBackend):
 
         reports_bucket.upload_file(
             path_file,
-            '{course}/activity_completion_report/{date}.csv'.format(
+            'reports/{course}/activity_completion_report/{date}.csv'.format(
                 course=course,
                 date=now,
             )
         )
-
-
-    def upload_to_ftp_storage(self, file_name, path_file):  # pylint: disable=method-hidden
-        """
-
-        """
-        print('Uploading to SFTP server')
-        hostname = self.ftp_credentials.get('SFTP_HOST', '')
-        username = self.ftp_credentials.get('SFTP_USER', '')
-        password = self.ftp_credentials.get('SFTP_PASS', '')
-        UseGSSAPI = False  # enable GSS-API / SSPI authentication
-        DoGSSAPIKeyExchange = False
-        hostkeytype = None
-        hostkey = None
-        Port = 22
-
-        try:
-            host_keys = paramiko.util.load_host_keys(
-                os.path.expanduser('~/.ssh/known_hosts'),
-            )
-        except IOError:
-            try:
-                # try ~/ssh/ too, because windows can't have a folder named ~/.ssh/
-                host_keys = paramiko.util.load_host_keys(
-                    os.path.expanduser('~/ssh/known_hosts'),
-                )
-            except IOError:
-                print('*** Unable to open host keys file')
-                host_keys = {}
-        import ipdb; ipdb.set_trace()
-        if hostname in host_keys:
-            hostkeytype = host_keys[hostname].keys()[0]
-            hostkey = host_keys[hostname][hostkeytype]
-
-        transport = paramiko.Transport(sock=(hostname, Port))
-        transport.connect(
-            hostkey,
-            username,
-            password,
-            gss_host=socket.getfqdn(hostname),
-            gss_auth=UseGSSAPI,
-            gss_kex=DoGSSAPIKeyExchange,
-        )
-
-
-        sftp = paramiko.SFTPClient.from_transport(transport)
-        # sftp.put(output_file_full_path, target_file_path)
 
 
 def generate_csv_dict(course_data={}):  # pylint: disable=dangerous-default-value
