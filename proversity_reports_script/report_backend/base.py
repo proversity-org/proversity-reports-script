@@ -24,7 +24,7 @@ class AbstractBaseReportBackend(object):
 
 
     @abc.abstractmethod
-    def create_csv_file(self, file_name, body_dict, headers, spreadsheet_id):
+    def create_csv_file(self, file_name, body_dict, headers, *args, **kwargs):
         """
         Creates the csv file with the passed arguments, and then save it locally.
         """
