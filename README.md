@@ -2,10 +2,10 @@
 
 ## Installation
 
-pip install pipenv
-python3 -m venv venv
-source venv/bin/activate
-pipenv install
+    pip install pipenv
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
 
 ## Configuration
 
@@ -65,7 +65,7 @@ The configuration file must be in json format. e.g.
         }
     }
 
-GOOGLE_OAUTH_CREDENTIALS came from downloaded Google oAuth credentials in json format.
+GOOGLE_OAUTH_CREDENTIALS come from downloaded Google oAuth credentials in json format.
 
 ## Running
 
