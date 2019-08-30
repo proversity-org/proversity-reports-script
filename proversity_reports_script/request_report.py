@@ -61,14 +61,16 @@ def fetch_report_url(report_url):
         report_url=report_url
     )
     courses = SETTINGS.get('COURSES', [])
+
     if not courses:
-        print('Course id was not provided')
+        print('Course id list was not provided.')
         exit()
 
-    data = {}
-    data.update({
-        'course_ids': courses
-    })
+    data = {
+        'course_ids': courses,
+    }
+
+    data.update(get_additional_request_data())
 
     response = requests.post(request_url, headers=headers, json=data)
 
@@ -167,3 +169,15 @@ def get_backend_report(report_settings):
     backend = import_module(module_string[0])
 
     return getattr(backend, class_string)
+
+
+def get_additional_request_data():
+    """
+    Return extra data to be included in the report request.
+    Additional request data must be defined in the report settings in the configuration file,
+    within a setting called: EXTRA_REQUEST_DATA.
+
+    Return:
+        request_extra_data: Dict containing the request extra data.
+    """
+    return report_settings.get('EXTRA_REQUEST_DATA', {})
