@@ -1,13 +1,14 @@
 """
-Last page accessed reports backend.
+Acitivity completion report backend.
 """
 import csv
-from datetime import datetime
 import os
+import socket
+from datetime import datetime
 
 import boto3
+import paramiko
 
-from proversity_reports_script.google_apis.sheets_api import update_sheets_data
 from proversity_reports_script.report_backend.base import AbstractBaseReportBackend
 
 
@@ -18,6 +19,9 @@ class ActivityCompletionReportBackend(AbstractBaseReportBackend):
 
     def __init__(self, *args, **kwargs):
         extra_data = kwargs.get('extra_data', {})
+        self.bucket_name = extra_data.get('BUCKET_NAME', '')
+        self.upload_to_ftp = extra_data.get('UPLOAD_TO_FTP', '')
+        self.ftp_credentials = extra_data.get('FTP_ACCOUNT_CREDENTIALS', {})
         super(ActivityCompletionReportBackend, self).__init__(extra_data.get('SPREADSHEET_DATA', {}))
 
 
@@ -34,6 +38,9 @@ class ActivityCompletionReportBackend(AbstractBaseReportBackend):
         """
         for course, course_data in iter(json_report_data.get('result', {}).items()):
             csv_data = generate_csv_dict(course_data)
+
+            if not csv_data:
+                continue
 
             self.create_csv_file(
                 course,
@@ -56,10 +63,14 @@ class ActivityCompletionReportBackend(AbstractBaseReportBackend):
             writer = csv.DictWriter(csv_file, fieldnames=column_headers)
 
             writer.writeheader()
+
             for row in body_dict:
                 writer.writerow(row)
 
         self.upload_file_to_storage(file_name, path_file)
+
+        if self.upload_to_ftp:
+            self.upload_to_ftp_storage(file_name, path_file)
 
 
     def upload_file_to_storage(self, course, path_file):
@@ -67,45 +78,82 @@ class ActivityCompletionReportBackend(AbstractBaseReportBackend):
         Upload the csv report, to S3 storage.
         """
         amazon_storage = boto3.resource('s3')
-        reports_bucket = amazon_storage.Bucket('teach-first-prod')
+        reports_bucket = amazon_storage.Bucket(self.bucket_name)
         now = datetime.now()
 
         reports_bucket.upload_file(
             path_file,
-            'reports/activity_completion_report/{course}/{date}.csv'.format(
+            '{course}/activity_completion_report/{date}.csv'.format(
                 course=course,
                 date=now,
             )
         )
 
 
-def generate_csv_dict(course_data):
+    def upload_to_ftp_storage(self, file_name, path_file):  # pylint: disable=method-hidden
+        """
+
+        """
+        print('Uploading to SFTP server')
+        hostname = self.ftp_credentials.get('SFTP_HOST', '')
+        username = self.ftp_credentials.get('SFTP_USER', '')
+        password = self.ftp_credentials.get('SFTP_PASS', '')
+        UseGSSAPI = False  # enable GSS-API / SSPI authentication
+        DoGSSAPIKeyExchange = False
+        hostkeytype = None
+        hostkey = None
+        Port = 22
+
+        try:
+            host_keys = paramiko.util.load_host_keys(
+                os.path.expanduser('~/.ssh/known_hosts'),
+            )
+        except IOError:
+            try:
+                # try ~/ssh/ too, because windows can't have a folder named ~/.ssh/
+                host_keys = paramiko.util.load_host_keys(
+                    os.path.expanduser('~/ssh/known_hosts'),
+                )
+            except IOError:
+                print('*** Unable to open host keys file')
+                host_keys = {}
+        import ipdb; ipdb.set_trace()
+        if hostname in host_keys:
+            hostkeytype = host_keys[hostname].keys()[0]
+            hostkey = host_keys[hostname][hostkeytype]
+
+        transport = paramiko.Transport(sock=(hostname, Port))
+        transport.connect(
+            hostkey,
+            username,
+            password,
+            gss_host=socket.getfqdn(hostname),
+            gss_auth=UseGSSAPI,
+            gss_kex=DoGSSAPIKeyExchange,
+        )
+
+
+        sftp = paramiko.SFTPClient.from_transport(transport)
+        # sftp.put(output_file_full_path, target_file_path)
+
+
+def generate_csv_dict(course_data={}):  # pylint: disable=dangerous-default-value
     """
     Return a csv dict to write the csv file.
     """
-    if not course_data:
-        return {}
-
     csv_data = []
 
     for user_data in course_data:
+        email = user_data.get('email', '')
         first_name = user_data.get('first_name', '')
         last_name = user_data.get('last_name', '')
-        first_login = user_data.get('first_login', '')
-        email = user_data.get('email', '')
-        last_login = user_data.get('last_login', '')
-        completed_activities = user_data.get('completed_activities', '')
-        total_activities = user_data.get('total_activities', '')
 
-        dict_writer_data = {
-            'first_name': first_name,
-            'last_name': last_name,
-            'first_login': first_login,
-            'email': email,
-            'last_login': last_login,
-            'completed_activities': completed_activities,
-            'total_activities': total_activities,
-        }
+        dict_writer_data = {}
+
+        dict_writer_data['First Name'] = first_name
+        dict_writer_data['Last Name'] = last_name
+        dict_writer_data['Email'] = email
+
         dict_writer_data.update(get_required_activity_dict(user_data))
 
         csv_data.append(dict_writer_data)
@@ -115,29 +163,37 @@ def generate_csv_dict(course_data):
 
 def get_required_activity_dict(user_data):
     """
-    Create a dict with the required data to patch the record on SalesForce.
+    Create a dict with the required activity data.
 
     Args:
-        user_data: Report json data.
+        user_data: Report json data per course.
     Returns:
         Dict containing activities info.
         {
             'Multiple Choice': 'completed',
-            'Image Explorer': 'completed'
+            'Image Explorer': 'completed',
+            'Video': 'not_completed'
         }
     """
     required_activities_data = {}
-    total_activities = user_data.get('total_activities')
+    total_activities = user_data.get('total_activities', 0)
 
     if total_activities:
         total = int(total_activities)
         # Create as many 'required_activity_' as the total number of activities.
         for activity_number in range(1, total + 1): # Plus 1, because the stop argument it's not inclusive.
-            required_activity_number = user_data.get('Required Activity {}'.format(activity_number), '')
-            required_activity_name = user_data.get('Required Activity {} Name'.format(activity_number), '')
+            required_activity_number = user_data.get('required_activity_{}'.format(activity_number), '')
+            required_activity_name = user_data.get('required_activity_{}_name'.format(activity_number), '')
+
+            # Let's add the activity number at the end of the name if two or more activities have the same name.
+            if required_activity_name in required_activities_data.keys():
+                required_activity_name = '{}-{}'.format(
+                    required_activity_name,
+                    activity_number,
+                )
 
             required_activities_data.update({
-                required_activity_name: required_activity_number
+                required_activity_name: required_activity_number,
             })
 
     return required_activities_data
