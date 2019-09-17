@@ -1,8 +1,11 @@
 """
 Report backend for enrollment report.
 """
+import csv
 import json
+import os
 
+import boto3
 import requests
 
 from proversity_reports_script.get_settings import get_settings
@@ -10,6 +13,7 @@ from proversity_reports_script.report_backend.base import AbstractBaseReportBack
 
 BATCH_SIZE = 15
 DEFAULT_LEAD_SOURCE = 'Salesforce'
+COURSES_DETAILS_FILE_PATH='PearsonX-Program-Structure .csv'
 
 
 class EnrollmentReportBackend(AbstractBaseReportBackend):
@@ -87,8 +91,38 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
 
             return full_name, full_name
 
+        def get_course_info_from_file(course_key):
+            """
+            Get course details from S3 file
+            """
+            course_details = {}
+            s3 = boto3.resource('s3')
+            bucket = s3.Bucket('pearson-prod')
+
+            # download file
+            with open('courses.csv', 'wb') as data:
+                bucket.download_fileobj(COURSES_DETAILS_FILE_PATH, data)
+
+            # reading file
+            with open('courses.csv', 'r') as csv_data:
+                reader = csv.DictReader(csv_data)
+                for row in reader:
+                    if row['Course key'] == course_key:
+                        course_details['program'] = row['Program of Interest - EO']
+                        course_details['company'] = row['Company / Account']
+                        course_details['type'] = row['Type Hidden']
+                        course_details['institution'] = row['Instutition Hidden']
+                        break
+            
+            # cleaning
+            if os.path.exists('courses.csv'):
+                os.remove('courses.csv')
+
+            return course_details
+        
         salesforce_data = []
         batch = []
+        course_details = get_course_info_from_file(course)
 
         for index, user in enumerate(course_data, 1):
             contact_id = user.get('contact_id', '')
@@ -113,10 +147,10 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
                 'FirstName': first_name if first_name else username,
                 'LastName': last_name if last_name else username,
                 'Email': user.get('email', ''),
-                'Company': self.extra_data.get('COMPANY_NAME', ''),
-                'Institution_Hidden': self.extra_data.get('INSTITUTION_HIDDEN_PREFIX', ''),
-                'Type_Hidden': self.extra_data.get('TYPE_HIDDEN', ''),
-                'Program_of_Interest': self.extra_data.get('PROGRAM_OF_INTEREST', ''),
+                'Company': course_details.get('company', ''),
+                'Institution_Hidden': course_details.get('institution', ''),
+                'Type_Hidden': course_details.get('type', ''),
+                'Program_of_Interest': course_details.get('program', ''),
                 'Intake_of_Intent': user.get('intake_of_intent', ''),
                 'Lead_Source': self.extra_data.get('LEAD_SOURCE', DEFAULT_LEAD_SOURCE),
                 'Program_Code': course,
