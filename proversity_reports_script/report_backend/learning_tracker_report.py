@@ -32,6 +32,24 @@ class LearningTrackerReportBackend(AbstractBaseReportBackend):
             return None
 
         report_data = json_report_data.get('result', {})
+        report_data = {
+            "course-v1:edx+cs108+2019": [
+                {
+                    "username": "verified",
+                    "cohort": "Default Group",
+                    "timeliness_of_submissions": -2,
+                    "user_id": 8,
+                    "number_of_graded_assessment": 1,
+                    "average_session_length": 0,
+                    "team": "team11",
+                    "cumulative_grade": 0.2,
+                    "weekly_clicks": 0,
+                    "has_verified_certificate": true,
+                    "email": "diego.millan@edunext.co",
+                    "time_between_sessions": 0
+                },
+            ],
+        }
         # report_data.update(self._get_edx_courses_data_from_csv())
         print(report_data)
 
