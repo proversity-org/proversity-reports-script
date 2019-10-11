@@ -113,13 +113,13 @@ class EnrollmentReportBackend(AbstractBaseReportBackend):
                         course_details['type'] = row['Type Hidden']
                         course_details['institution'] = row['Instutition Hidden']
                         break
-            
+
             # cleaning
             if os.path.exists('courses.csv'):
                 os.remove('courses.csv')
 
             return course_details
-        
+
         salesforce_data = []
         batch = []
         course_details = get_course_info_from_file(course)

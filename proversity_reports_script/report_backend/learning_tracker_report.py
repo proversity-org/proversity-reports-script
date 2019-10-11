@@ -5,6 +5,7 @@ import csv
 
 import boto3
 
+from proversity_reports_script.messages.helpers import SendGridSender
 from proversity_reports_script.report_backend.base import AbstractBaseReportBackend
 
 
@@ -13,12 +14,15 @@ class LearningTrackerReportBackend(AbstractBaseReportBackend):
     Backend for learning tracker report.
     """
 
+    THRESHOLD_FILE_PATH='ltr-targets.csv'
+
     def __init__(self, *args, **kwargs):
         extra_data = kwargs.get('extra_data', {})
         super(LearningTrackerReportBackend, self).__init__(extra_data.get('SPREADSHEET_DATA', {}))
         amazon_settings = extra_data.get('AWS_DATA', {})
         self.amazon_bucket = amazon_settings.get('amazon_bucket', '')
         self.file_prefix = amazon_settings.get('file_prefix', '')
+        self.lt_extra_data = extra_data
 
     def generate_report(self, json_report_data):
         """
@@ -28,8 +32,11 @@ class LearningTrackerReportBackend(AbstractBaseReportBackend):
             return None
 
         report_data = json_report_data.get('result', {})
-        report_data.update(self._get_edx_courses_data_from_csv())
+        # report_data.update(self._get_edx_courses_data_from_csv())
         print(report_data)
+
+        # Calling helper to send notification
+        self._send_notifications(report_data)
 
     def json_report_to_csv(self, json_report_data):
         """
@@ -86,6 +93,13 @@ class LearningTrackerReportBackend(AbstractBaseReportBackend):
                 }
                 course_data.append(user_data)
                 data[course_id] = course_data
-                break
 
         return data
+
+    def _send_notifications(self, data):
+        """
+        TODO
+        """
+        sendgrid_conf = self.lt_extra_data.get("SENDGRID_CONF")
+        sender = SendGridSender(sendgrid_conf.get("API_KEY"))
+        sender.deliver_message_to_learners(data, self.lt_extra_data)

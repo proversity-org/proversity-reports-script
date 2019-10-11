@@ -58,8 +58,6 @@ def generate_student_subplots(user_record, graph_confs):
     subplots_data = []
 
     for graph in graph_confs:
-        # append if no issue -- i think its done
-        # check how many graph would be available
         try:
             subplots_data.append({
                 "x": "metric_category",
