@@ -6,7 +6,7 @@ from proversity_reports_script.messages.helpers import (
     generate_student_subplots,
     generate_graph,
     get_graph,
-    get_course_info_from_file2,
+    update_course_threshold,
     format_learner_record,
 )
 from sendgrid import SendGridAPIClient
@@ -77,7 +77,8 @@ class SendGridSender:
                 image_string = None
                 record = format_learner_record(record)
                 # extra data configs
-                weekly_course_threshold = get_course_info_from_file2(course_id, "1")
+                # calculate exact week
+                update_course_threshold(course_id, "1", extra_data["metrics"])
                 subplots_for_student = generate_student_subplots(record, extra_data["metrics"])
                 graph_generated = generate_graph(subplots=subplots_for_student)
                 if graph_generated:
