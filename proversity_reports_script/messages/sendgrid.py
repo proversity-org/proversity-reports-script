@@ -78,7 +78,7 @@ class SendGridSender:
                 record = format_learner_record(record)
                 # extra data configs
                 # calculate exact week
-                update_course_threshold(course_id, "1", extra_data["metrics"])
+                # update_course_threshold(course_id, "1", extra_data["metrics"])
                 subplots_for_student = generate_student_subplots(record, extra_data["metrics"])
                 graph_generated = generate_graph(subplots=subplots_for_student)
                 if graph_generated:
