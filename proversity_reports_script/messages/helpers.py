@@ -47,7 +47,8 @@ def generate_graph(**kwargs):
 
         fig.tight_layout()
         fig.savefig(os.path.join(script_dir, rel_path))
-    except Exception:
+    except Exception as error:
+        print(error)
         return None
     else:
         return "Completed"
@@ -76,7 +77,8 @@ def generate_student_subplots(user_record, graph_confs):
                 "title": graph["graph_title"],
                 "palette": "Blues_d",
             })
-        except Exception:
+        except Exception as error:
+            print(error)
             continue
 
     return subplots_data

@@ -84,6 +84,7 @@ class SendGridSender:
                 if graph_generated:
                     image_string = get_graph()
                 if not image_string:
+                    print("Not able to generate the graph")
                     continue
                 receiver = {"email": record["email"]}
                 dindata = {"name": record["username"], 'subject': "Week {}: {} Learning Tracker".format(1, course_id)}
