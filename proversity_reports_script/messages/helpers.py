@@ -104,7 +104,7 @@ def get_graph():
 
 
 # testing methods
-def update_course_threshold(course_key, week, current_threshold):
+def update_course_threshold(course_key, week, filename):
     """
     Get course details from S3 file
     """
@@ -112,13 +112,8 @@ def update_course_threshold(course_key, week, current_threshold):
     s3 = boto3.resource('s3')
     bucket = s3.Bucket('pearson-prod')
 
-    # download file
-    with open('ltr-metrics.csv', 'wb') as data:
-        temp = 'px_lt_targets.csv'
-        bucket.download_fileobj(temp, data)
-
     # reading file
-    with open('ltr-metrics.csv', 'r') as csv_data:
+    with open(filename, 'r') as csv_data:
         reader = csv.DictReader(csv_data)
         for row in reader:
             # set required look up
@@ -127,24 +122,29 @@ def update_course_threshold(course_key, week, current_threshold):
                 row['Week'] == week,
             ]
             if all(conditions):
-                try:
-                    current_threshold.get('cumulative_grade').update(
-                        {'passing_score': float(row['Cumulative Grade'])}
-                    )
-                    current_threshold.get('average_session_length').update(
-                        {'passing_score': float(row['Avg Session Length'])}
-                    )
-                    current_threshold.get('number_of_graded_assessment').update(
-                        {'passing_score': float(row['Submissions'])}
-                    )
-                except Exception:
-                    pass
+                threshold = row
                 break
 
     # cleaning
-    import os
-    if os.path.exists('ltr-metrics.csv'):
-        os.remove('ltr-metrics.csv')
+    # import os
+    # if os.path.exists('ltr-metrics.csv'):
+    #     os.remove('ltr-metrics.csv')
+
+    return threshold
+
+def download_from_data_source(source_env_variables):
+    """
+    """
+    s3 = boto3.resource('s3')
+    bucket = s3.Bucket(source_env_variables.get('bucket'))
+    filename = source_env_variables.get('source_name')
+    # download file and dump the content at ltr-metrics.csv
+    with open(filename, 'wb') as data:
+        bucket.download_fileobj(filename, data)
+
+    # return the name of the file downloaded
+    print('File {} downloaded from data source'.format(filename))
+    return filename
 
 
 def format_learner_record(record):

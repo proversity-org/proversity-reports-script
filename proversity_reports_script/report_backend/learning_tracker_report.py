@@ -20,10 +20,14 @@ class LearningTrackerReportBackend(AbstractBaseReportBackend):
     def __init__(self, *args, **kwargs):
         extra_data = kwargs.get('extra_data', {})
         super(LearningTrackerReportBackend, self).__init__(extra_data.get('SPREADSHEET_DATA', {}))
-        amazon_settings = extra_data.get('AWS_DATA', {})
-        self.amazon_bucket = amazon_settings.get('amazon_bucket', '')
-        self.file_prefix = amazon_settings.get('file_prefix', '')
         self.lt_extra_data = extra_data
+        self.data_source_conf = self.lt_extra_data.get("DATA_SOURCE", {})
+
+        # check if its working with external learners
+        # amazon_settings = extra_data.get('AWS_DATA', {})
+        # self.amazon_bucket = amazon_settings.get('amazon_bucket', '')
+        # self.file_prefix = amazon_settings.get('file_prefix', '')
+        # donde se usan las de arriba??? chequear y consolidar en DATA_SOURCE
 
     def generate_report(self, json_report_data):
         """
@@ -32,12 +36,32 @@ class LearningTrackerReportBackend(AbstractBaseReportBackend):
         if json_report_data.get('status') != 'SUCCESS':
             return None
 
-        report_data = json_report_data.get('result', {})
-        print(json.dumps(report_data))
+        # Update report with external courses data
         # report_data.update(self._get_edx_courses_data_from_csv())
 
+        # check received data
+        report_data = json_report_data.get('result', {})
+        print(json.dumps(report_data))
+
+        # Now download required files
+        from proversity_reports_script.messages.helpers import (
+            download_from_data_source,
+            update_course_threshold,
+        )
+
+        threshold_internal_courses = download_from_data_source(
+            self.data_source_conf.get('threshold_internal_courses')
+        )
+        print(threshold_internal_courses)
+        data_for_course = update_course_threshold(
+            'course-v1:PRO+test1233+2017',
+            '6',
+            threshold_internal_courses,
+        )
+        print(data_for_course)
+
         # Calling helper to send notifications
-        self._send_notifications(report_data)
+        # self._send_notifications(report_data)
 
     def json_report_to_csv(self, json_report_data):
         """
