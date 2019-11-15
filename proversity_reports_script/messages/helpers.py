@@ -104,7 +104,6 @@ def get_graph():
         return encoded_string
 
 
-# testing methods
 def get_course_threshold(course_key, week, filename):
     """
     Get course details from S3 file
@@ -138,31 +137,36 @@ def update_course_threshold(
     TODO
     """
 
-    # it should also handle the logic when external course
-    # try to avoid 2 calculations over files
-
-    filename = source_env_variables.get('threshold_internal_courses').get('source_name')
-    override_threshold = get_course_threshold(
-        course_key,
-        week,
-        filename
-    )
-
     try:
-        current_threshold.get('cumulative_grade').update(
-            {'passing_score': float(override_threshold['Cumulative Grade'])}
-        )
-        current_threshold.get('average_session_length').update(
-            {'passing_score': float(override_threshold['Avg Session Length'])}
-        )
-        current_threshold.get('number_of_graded_assessment').update(
-            {'passing_score': float(override_threshold['Submissions'])}
-        )
+        if course_key in source_env_variables.get('learner_data_external_courses').get('courses', []):
+            filename = source_env_variables.get('threshold_external_courses').get('source_name')
+            override_threshold = get_course_threshold(
+                course_key,
+                week,
+                filename
+            )
+            current_threshold.get('cumulative_grade').update(
+                {'passing_score': float(override_threshold['Cumulative Grade'])}
+            )
+        else:
+            filename = source_env_variables.get('threshold_internal_courses').get('source_name')
+            override_threshold = get_course_threshold(
+                course_key,
+                week,
+                filename
+            )
+            current_threshold.get('cumulative_grade').update(
+                {'passing_score': float(override_threshold['Cumulative Grade'])}
+            )
+            current_threshold.get('average_session_length').update(
+                {'passing_score': float(override_threshold['Avg Session Length'])}
+            )
+            current_threshold.get('number_of_graded_assessment').update(
+                {'passing_score': float(override_threshold['Submissions'])}
+            )
     except Exception as error:
         print('Could not find threshold for course {}'.format(course_key))
-    else:
-        # call external override
-        pass
+
 
     return current_threshold
 

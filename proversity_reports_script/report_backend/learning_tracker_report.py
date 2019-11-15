@@ -27,21 +27,12 @@ class LearningTrackerReportBackend(AbstractBaseReportBackend):
         self.lt_extra_data = extra_data
         self.data_source_conf = self.lt_extra_data.get("DATA_SOURCE", {})
 
-        # check if its working with external learners
-        # amazon_settings = extra_data.get('AWS_DATA', {})
-        # self.amazon_bucket = amazon_settings.get('amazon_bucket', '')
-        # self.file_prefix = amazon_settings.get('file_prefix', '')
-        # donde se usan las de arriba??? chequear y consolidar en DATA_SOURCE
-
     def generate_report(self, json_report_data):
         """
         Main logic to generate the report.
         """
         if json_report_data.get('status') != 'SUCCESS':
             return None
-
-        # Update report with external courses data
-        # report_data.update(self._get_edx_courses_data_from_csv())
 
         # check received data
         report_data = json_report_data.get('result', {})
@@ -56,6 +47,14 @@ class LearningTrackerReportBackend(AbstractBaseReportBackend):
         )
         learner_data_external_courses = download_from_data_source(
             self.data_source_conf.get('learner_data_external_courses')
+        )
+
+        # Update report with external courses data
+        report_data.update(
+            self._get_edx_courses_data_from_csv(
+                learner_data_external_courses,
+                self.data_source_conf.get('learner_data_external_courses').get('courses', [])
+            )
         )
 
         # Calling helper to send notifications
@@ -79,30 +78,18 @@ class LearningTrackerReportBackend(AbstractBaseReportBackend):
         """
         raise NotImplementedError()
 
-    def _get_edx_courses_data_from_csv(self):
+    def _get_edx_courses_data_from_csv(self, filename, courses):
         """
         Gets csv file from S3 and extracts the data.
         """
-        amazon_resource = boto3.resource('s3')
-        amazon_bucket = amazon_resource.Bucket(self.amazon_bucket)
-        amazon_client = boto3.client('s3')
-        previous = None
         data = {}
 
-        for amazon_object in amazon_bucket.objects.filter(Prefix=self.file_prefix):
-
-            if not previous or amazon_object.last_modified > previous:
-                key = amazon_object.key
-
-            previous = amazon_object.last_modified
-
-        with open('aws-file.csv', 'wb') as csv_data:
-            amazon_client.download_fileobj(self.amazon_bucket, key, csv_data)
-            csv_data.close()
-        with open('aws-file.csv', 'r') as csv_data:
+        with open(filename, 'r') as csv_data:
             dict_reader = csv.DictReader(csv_data)
             for row in dict_reader:
                 course_id = row['course_id']
+                if course_id not in courses:
+                    continue
                 course_data = data.get(course_id, [])
                 current_grade = row.get('current_grade', '0')
                 user_id = row.get('id', '')
