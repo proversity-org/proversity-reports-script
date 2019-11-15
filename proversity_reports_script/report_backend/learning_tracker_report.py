@@ -50,7 +50,6 @@ class LearningTrackerReportBackend(AbstractBaseReportBackend):
         )
 
         # Update report with external courses data
-        report_data = {}
         report_data.update(
             self._get_edx_courses_data_from_csv(
                 learner_data_external_courses,
