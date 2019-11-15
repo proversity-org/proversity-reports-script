@@ -4,6 +4,8 @@ Helper module with utilities to generate the content of a message.
 import csv
 import base64
 import os
+import traceback
+
 
 import boto3
 import pandas as pd
@@ -78,7 +80,6 @@ def generate_student_subplots(user_record, graph_confs):
                 "palette": "Blues_d",
             })
         except Exception as error:
-            print(error)
             continue
 
     return subplots_data
@@ -104,7 +105,7 @@ def get_graph():
 
 
 # testing methods
-def update_course_threshold(course_key, week, filename):
+def get_course_threshold(course_key, week, filename):
     """
     Get course details from S3 file
     """
@@ -125,12 +126,46 @@ def update_course_threshold(course_key, week, filename):
                 threshold = row
                 break
 
-    # cleaning
-    # import os
-    # if os.path.exists('ltr-metrics.csv'):
-    #     os.remove('ltr-metrics.csv')
-
     return threshold
+
+def update_course_threshold(
+    source_env_variables,
+    course_key,
+    week,
+    current_threshold
+):
+    """
+    TODO
+    """
+
+    # it should also handle the logic when external course
+    # try to avoid 2 calculations over files
+
+    filename = source_env_variables.get('threshold_internal_courses').get('source_name')
+    override_threshold = get_course_threshold(
+        course_key,
+        week,
+        filename
+    )
+
+    try:
+        current_threshold.get('cumulative_grade').update(
+            {'passing_score': float(override_threshold['Cumulative Grade'])}
+        )
+        current_threshold.get('average_session_length').update(
+            {'passing_score': float(override_threshold['Avg Session Length'])}
+        )
+        current_threshold.get('number_of_graded_assessment').update(
+            {'passing_score': float(override_threshold['Submissions'])}
+        )
+    except Exception as error:
+        print('Could not find threshold for course {}'.format(course_key))
+    else:
+        # call external override
+        pass
+
+    return current_threshold
+
 
 def download_from_data_source(source_env_variables):
     """
@@ -138,7 +173,8 @@ def download_from_data_source(source_env_variables):
     s3 = boto3.resource('s3')
     bucket = s3.Bucket(source_env_variables.get('bucket'))
     filename = source_env_variables.get('source_name')
-    # download file and dump the content at ltr-metrics.csv
+
+    # download file and dump the content at filename
     with open(filename, 'wb') as data:
         bucket.download_fileobj(filename, data)
 

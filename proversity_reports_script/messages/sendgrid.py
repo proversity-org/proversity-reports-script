@@ -1,13 +1,15 @@
 """
 Sendrid client module.
 """
+import copy
+import traceback
 
 from proversity_reports_script.messages.helpers import (
     generate_student_subplots,
     generate_graph,
     get_graph,
-    update_course_threshold,
     format_learner_record,
+    update_course_threshold,
 )
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import (
@@ -76,10 +78,16 @@ class SendGridSender:
             for record in student_records:
                 image_string = None
                 record = format_learner_record(record)
-                # extra data configs
-                # calculate exact week
-                # update_course_threshold(course_id, "1", extra_data["metrics"])
-                subplots_for_student = generate_student_subplots(record, extra_data["metrics"])
+                # calculate exact week per student
+                metrics = copy.deepcopy(extra_data['metrics'])
+                metrics = update_course_threshold(
+                    extra_data.get('DATA_SOURCE'),
+                    course_id,
+                    '1',
+                    metrics,
+                )
+                subplots_for_student = generate_student_subplots(record, metrics)
+                metrics.clear()
                 graph_generated = generate_graph(subplots=subplots_for_student)
                 if graph_generated:
                     image_string = get_graph()

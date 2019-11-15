@@ -6,6 +6,10 @@ import json
 
 import boto3
 
+from proversity_reports_script.messages.helpers import (
+    download_from_data_source,
+    get_course_threshold,
+)
 from proversity_reports_script.messages.sendgrid import SendGridSender
 from proversity_reports_script.report_backend.base import AbstractBaseReportBackend
 
@@ -44,24 +48,18 @@ class LearningTrackerReportBackend(AbstractBaseReportBackend):
         print(json.dumps(report_data))
 
         # Now download required files
-        from proversity_reports_script.messages.helpers import (
-            download_from_data_source,
-            update_course_threshold,
-        )
-
         threshold_internal_courses = download_from_data_source(
             self.data_source_conf.get('threshold_internal_courses')
         )
-        print(threshold_internal_courses)
-        data_for_course = update_course_threshold(
-            'course-v1:PRO+test1233+2017',
-            '6',
-            threshold_internal_courses,
+        threshold_external_courses = download_from_data_source(
+            self.data_source_conf.get('threshold_external_courses')
         )
-        print(data_for_course)
+        learner_data_external_courses = download_from_data_source(
+            self.data_source_conf.get('learner_data_external_courses')
+        )
 
         # Calling helper to send notifications
-        # self._send_notifications(report_data)
+        self._send_notifications(report_data)
 
     def json_report_to_csv(self, json_report_data):
         """
@@ -123,7 +121,7 @@ class LearningTrackerReportBackend(AbstractBaseReportBackend):
 
     def _send_notifications(self, data):
         """
-        TODO
+        Method in charge of delivering the learning tracker message.
         """
         sendgrid_conf = self.lt_extra_data.get("SENDGRID_CONF")
         sender = SendGridSender(sendgrid_conf.get("API_KEY"))
