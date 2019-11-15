@@ -31,21 +31,26 @@ def generate_graph(**kwargs):
         fig, axes = plt.subplots(
             nrows=1,
             ncols=len(kwargs["subplots"]),
-            figsize=(10.0, 5.0)
+            figsize=(10.0, 5.0),
         )
         fig.subplots_adjust(hspace=0.5)
 
         for idx, subplot in enumerate(kwargs["subplots"]):
-            sns.barplot(
-                x=subplot["x"],
-                y=subplot["y"],
-                data=subplot["data"],
-                ax=axes[idx],
-                palette=subplot["palette"],
-            )
-            axes[idx].set_xlabel('')
-            axes[idx].title.set_text(subplot["title"])
-            axes[idx].set_ylabel(subplot["ylabel"])
+            plot_params = {
+                'x': subplot['x'],
+                'y': subplot['y'],
+                'data': subplot['data'],
+                'palette': subplot['palette'],
+            }
+            if len(kwargs['subplots']) > 1:
+                plot_params['ax'] = axes[idx]
+            else:
+                plot_params['ax'] = axes
+
+            sns.barplot(**plot_params)
+            plot_params['ax'].set_xlabel('')
+            plot_params['ax'].title.set_text(subplot["title"])
+            plot_params['ax'].set_ylabel(subplot["ylabel"])
 
         fig.tight_layout()
         fig.savefig(os.path.join(script_dir, rel_path))
