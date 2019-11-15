@@ -50,12 +50,15 @@ class LearningTrackerReportBackend(AbstractBaseReportBackend):
         )
 
         # Update report with external courses data
+        report_data = {}
         report_data.update(
             self._get_edx_courses_data_from_csv(
                 learner_data_external_courses,
                 self.data_source_conf.get('learner_data_external_courses').get('courses', [])
             )
         )
+        print('Data updated')
+        print(json.dumps(report_data))
 
         # Calling helper to send notifications
         self._send_notifications(report_data)
@@ -93,16 +96,16 @@ class LearningTrackerReportBackend(AbstractBaseReportBackend):
                 course_data = data.get(course_id, [])
                 current_grade = row.get('current_grade', '0')
                 user_id = row.get('id', '')
-
-                user_data = {
-                    'username': row.get('user_username', ''),
-                    'email': row.get('user_email', ''),
-                    'user_id': int(user_id) if user_id else user_id,
-                    'cumulative_grade': float(current_grade) if current_grade else 0,
-                    'has_verified_certificate': row.get('has_passed', 'False') == 'True',
-                }
-                course_data.append(user_data)
-                data[course_id] = course_data
+                if row.get('user_username', '') == '949ce1dd94f24f3d9fafe18d8770b9':
+                    user_data = {
+                        'username': row.get('user_username', ''),
+                        'email': row.get('user_email', ''),
+                        'user_id': int(user_id) if user_id else user_id,
+                        'cumulative_grade': float(current_grade) if current_grade else 0,
+                        'has_verified_certificate': row.get('has_passed', 'False') == 'True',
+                    }
+                    course_data.append(user_data)
+                    data[course_id] = course_data
 
         return data
 
