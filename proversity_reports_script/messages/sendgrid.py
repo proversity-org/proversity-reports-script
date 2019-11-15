@@ -80,7 +80,7 @@ class SendGridSender:
                 record = format_learner_record(record)
                 # calculate exact week per student
                 metrics = copy.deepcopy(extra_data['metrics'])
-                metrics = update_course_threshold(
+                metrics, course_title = update_course_threshold(
                     extra_data.get('DATA_SOURCE'),
                     course_id,
                     '1',
@@ -95,7 +95,7 @@ class SendGridSender:
                     print("Not able to generate the graph")
                     continue
                 receiver = {"email": record["email"]}
-                dindata = {"name": record["username"], 'subject': "Week {}: {} Learning Tracker".format(1, course_id)}
+                dindata = {"name": record["username"], 'subject': "Week {}: {} Learning Tracker".format(1, course_title)}
                 message_data = {
                     "image_string": image_string,
                     "sender": extra_data["SENDGRID_CONF"]["SENDER"],

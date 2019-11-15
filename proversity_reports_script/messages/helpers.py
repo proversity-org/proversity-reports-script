@@ -173,7 +173,7 @@ def update_course_threshold(
         print('Could not find threshold for course {}'.format(course_key))
 
 
-    return current_threshold
+    return current_threshold, override_threshold.get('Course Title', '')
 
 
 def download_from_data_source(source_env_variables):
