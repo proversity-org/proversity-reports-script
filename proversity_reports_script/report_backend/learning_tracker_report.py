@@ -95,16 +95,15 @@ class LearningTrackerReportBackend(AbstractBaseReportBackend):
                 course_data = data.get(course_id, [])
                 current_grade = row.get('current_grade', '0')
                 user_id = row.get('id', '')
-                if row.get('user_username', '') == '949ce1dd94f24f3d9fafe18d8770b9':
-                    user_data = {
-                        'username': row.get('user_username', ''),
-                        'email': row.get('user_email', ''),
-                        'user_id': int(user_id) if user_id else user_id,
-                        'cumulative_grade': float(current_grade) if current_grade else 0,
-                        'has_verified_certificate': row.get('has_passed', 'False') == 'True',
-                    }
-                    course_data.append(user_data)
-                    data[course_id] = course_data
+                user_data = {
+                    'username': row.get('user_username', ''),
+                    'email': row.get('user_email', ''),
+                    'user_id': int(user_id) if user_id else user_id,
+                    'cumulative_grade': float(current_grade) if current_grade else 0,
+                    'has_verified_certificate': row.get('has_passed', 'False') == 'True',
+                }
+                course_data.append(user_data)
+                data[course_id] = course_data
 
         return data
 
