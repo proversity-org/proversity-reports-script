@@ -170,6 +170,7 @@ def update_course_threshold(
                 {'passing_score': float(override_threshold['Submissions'])}
             )
     except Exception as error:
+        override_threshold = {}
         print('Could not find threshold for course {}'.format(course_key))
 
 
