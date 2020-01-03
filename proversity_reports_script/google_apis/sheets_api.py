@@ -111,7 +111,7 @@ def get_data_from_csv(file_path):
         yield []
 
 
-def update_sheets_data(file_path, spreadsheet_id):
+def update_sheets_data(file_path, spreadsheet_id, spreadsheet_range_name='Sheet1'):
     """
     Updates the report data on the provided spreadsheet id.
 
@@ -120,6 +120,9 @@ def update_sheets_data(file_path, spreadsheet_id):
     Args:
         file_path: Report file data path.
         spreadsheet_id: Google Sheet report ID.
+        spreadsheet_range_name: Range name to update the spreadsheet file in A notation:
+        https://developers.google.com/sheets/api/guides/concepts#a1_notation
+        Defaults to Sheet1 as name of the first spreadsheet tab.
     Returns:
         None: if there is a problem updating the report.
     """
@@ -133,11 +136,9 @@ def update_sheets_data(file_path, spreadsheet_id):
         print('Spreadsheet id was not provided and the report cannot be updated on Google Sheets.')
         return None
 
-    # Updates all the spreadsheet.
-    range_name = 'Sheet1'
     value_input_option = 'USER_ENTERED'
     body = {
-        'values': csv_data
+        'values': csv_data,
     }
     api_service = get_sheets_api_service()
 
@@ -148,12 +149,12 @@ def update_sheets_data(file_path, spreadsheet_id):
     try:
         api_service.values().clear(
             spreadsheetId=spreadsheet_id,
-            range=range_name,
+            range=spreadsheet_range_name,
         ).execute()
 
         api_service.values().update(
             spreadsheetId=spreadsheet_id,
-            range=range_name,
+            range=spreadsheet_range_name,
             valueInputOption=value_input_option,
             body=body,
         ).execute()
