@@ -12,9 +12,10 @@ from proversity_reports_script.get_settings import get_settings
 SETTINGS = {}
 report_backend = None
 report_settings = {}
+command_extra_arguments = {}
 
 
-def init_report(report_name):
+def init_report(report_name, extra_arguments):
     """
     Init module to request the report generation.
 
@@ -24,6 +25,7 @@ def init_report(report_name):
     global report_backend
     global SETTINGS
     global report_settings
+    global command_extra_arguments
 
     SETTINGS = get_settings(should_set_environment_settings=True)
 
@@ -38,8 +40,8 @@ def init_report(report_name):
         exit()
 
     report_url = report_settings.get('REPORT_URL', '')
-
     report_backend = get_backend_report(report_settings)
+    command_extra_arguments = extra_arguments
 
     fetch_report_url(report_url)
 
@@ -93,7 +95,6 @@ def polling_report_data(report_data_url):
     report_data = fetch_data_report(report_data_url)
 
     while(report_data.get('status') != 'SUCCESS'):
-        # import ipdb; ipdb.set_trace()
         polling_count += 1
         sleep_for = 2 # every 2 seconds for 10 seconds
 
@@ -121,7 +122,9 @@ def polling_report_data(report_data_url):
     print('Got it...')
 
     extra_data = report_settings.get('EXTRA_DATA', {})
+    extra_data['extra_arguments'] = command_extra_arguments
     report_builder = report_backend(extra_data=extra_data)
+
     report_builder.generate_report(report_data)
 
 
@@ -177,7 +180,17 @@ def get_additional_request_data():
     Additional request data must be defined in the report settings in the configuration file,
     within a setting called: EXTRA_REQUEST_DATA.
 
+    You can overwrite any extra request data item from command arguments, to do so
+    you only need to add the command argument with the same name that you defined in the
+    configuration file and the extra request data item will be overwritten with the command argument value.
+
     Return:
         request_extra_data: Dict containing the request extra data.
     """
-    return report_settings.get('EXTRA_REQUEST_DATA', {})
+    extra_request_data_from_settings = report_settings.get('EXTRA_REQUEST_DATA', {})
+    extra_request_data = {}
+
+    for item, value in extra_request_data_from_settings.items():
+        extra_request_data[item] = getattr(command_extra_arguments, item, value)
+
+    return extra_request_data
