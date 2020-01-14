@@ -4,6 +4,7 @@ Time spent per user report backend.
 import csv
 import functools
 import os
+from collections import OrderedDict
 from datetime import datetime
 
 import boto3
@@ -157,11 +158,10 @@ def build_time_spent_report_data(course_data):
 
     for user_data in course_data:
         course_blocks = user_data.get('blocks', [])
-        user_report_data = {
-            'Student': user_data.get('username', ''),
-            'Cohort': user_data.get('user_cohort', ''),
-            'Teams': user_data.get('user_teams', ''),
-        }
+        user_report_data = OrderedDict()
+        user_report_data['Student'] = user_data.get('username', '')
+        user_report_data['Cohort'] = user_data.get('user_cohort', '')
+        user_report_data['Teams'] = user_data.get('user_teams', '')
 
         for course_block_index, course_block in enumerate(course_blocks):
             vertical_name = course_block.get('vertical_name', '')
@@ -200,6 +200,8 @@ def grouping_report_data_by_key(course_data, grouping_key):
         }]
     """
     course_groups = set([data.get(grouping_key, '') for data in course_data])
+    # Sort the list to maintain the order of the groups in the report data.
+    course_groups = sorted(course_groups)
     group_report_data = []
 
     for group in course_groups:
@@ -224,20 +226,25 @@ def grouping_report_data_by_key(course_data, grouping_key):
         # Reduce the identical blocks to only one block.
         for block_group_index, block_group in enumerate(block_groups):
             course_teams_dict = {course_team: 0 for course_team in course_groups}
+            course_teams_dict = OrderedDict(
+                sorted(
+                    course_teams_dict.items(),
+                    key=lambda g: g[0],
+                )
+            )
 
             try:
                 current_block = block_group[0]
             except IndexError:
                 continue
 
-            block_data = {
-                'section_position': current_block.get('chapter_position', ''),
-                'section': current_block.get('chapter_name', ''),
-                'subsection_position': current_block.get('sequential_position', ''),
-                'subsection': current_block.get('sequential_name', ''),
-                'vertical_position': current_block.get('vertical_position', ''),
-                'vertical_name': current_block.get('vertical_name', ''),
-            }
+            block_data = OrderedDict()
+            block_data['section_position'] = current_block.get('chapter_position', '')
+            block_data['section'] = current_block.get('chapter_name', '')
+            block_data['subsection_position'] = current_block.get('sequential_position', '')
+            block_data['subsection'] = current_block.get('sequential_name', '')
+            block_data['vertical_position'] = current_block.get('vertical_position', '')
+            block_data['vertical_name'] = current_block.get('vertical_name', '')
 
             # Sum all the average_time_spent.
             course_teams_dict[group] = functools.reduce(
