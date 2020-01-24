@@ -4,7 +4,7 @@ Main module for additional proversity reports.
 from argparse import ArgumentParser
 import os
 
-from proversity_reports_script.request_report import init_report
+from proversity_reports_script.request_report import FetchReportData
 
 
 def main():
@@ -20,6 +20,7 @@ def main():
     )
     parser.add_argument('--config-file', '-c', help='Path to configuration file.', required=True)
     parser.add_argument('--oauth-config-file', help='Path to the Google oAuth configuration file.', required=True)
+    parser.add_argument('--api-version', help='Version of the reports API.', default='v0')
 
     know_arguments, unknown_arguments = parser.parse_known_args()  # pylint: disable=unused-variable
 
@@ -32,7 +33,11 @@ def main():
     os.environ['CONFIGURATION_FILE_PATH'] = args.config_file
     os.environ['OAUTH_CONFIGURATION_FILE'] = args.oauth_config_file
 
-    init_report(args.report, args)
+    FetchReportData(
+        report_name=args.report,
+        extra_arguments=args,
+        api_version=args.api_version,
+    ).init_report_pipeline()
 
 
 if __name__ == '__main__':
