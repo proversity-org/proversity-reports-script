@@ -235,13 +235,10 @@ def polling_report_data(report_data_url, request_headers):
         if polling_count >= 13:
             sleep_for = 60 # then once a minute for 3
 
-        if polling_count >= 16: # then stop
+        if polling_count >= 16 or report_data.get('status') == 'FAILURE': # then stop
             print('Status failed to become success.')
-            exit()
-
-        if report_data.get('status') == 'FAILURE':
-            print('Task failed...')
-            exit()
+            print('Failed task URL: {}'.format(report_data_url))
+            return {}
 
         sleep(sleep_for)
         print('waitig for... {}'.format(sleep_for))
