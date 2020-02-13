@@ -153,7 +153,7 @@ def build_course_enrollment_per_site_report(enrollment_data):
         date_of_enrollment = get_datetime_object(enrollment.get('date_of_enrollment', ''))
         one_year = timedelta(days=365)
 
-        row_data['Course'] = enrollment_data.get('course_key', '')
+        row_data['Course'] = enrollment_data.get('course', '')
         row_data['Username'] = enrollment.get('username', '')
         row_data['Email'] = enrollment.get('email', '')
         row_data['Role'] = enrollment.get('role', '')
@@ -194,7 +194,7 @@ def build_courses_per_site_data(enrollment_data):
         row_data: Course row data.
     """
     row_data = OrderedDict()
-    row_data['Course'] = enrollment_data.get('course_key', '')
+    row_data['Course'] = enrollment_data.get('course', '')
     row_data['Number of Registered users'] = enrollment_data.get('registered_users', 0)
     row_data['Number of Enrolled users'] = len(enrollment_data.get('data', []))
 
