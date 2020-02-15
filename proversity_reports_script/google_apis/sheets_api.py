@@ -102,7 +102,13 @@ def get_data_from_csv(file_path):
 
     if os.path.exists(file_path):
         with open(file_path, 'r') as csvfile:
-            report_reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+            report_reader = csv.reader(
+                csvfile,
+                delimiter=',',
+                quoting=csv.QUOTE_NONE,
+                doublequote=False,
+                escapechar=';',
+            )
 
             for row in report_reader:
                 yield row
