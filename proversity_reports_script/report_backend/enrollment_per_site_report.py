@@ -169,6 +169,7 @@ def build_course_enrollment_per_site_report(enrollment_data):
         row_data['Date of Licence Expiration'] = (date_of_registration + one_year).strftime(date_format)
         row_data['Days used'] = (datetime.now() - date_of_registration).days
         row_data['Licence days remaining'] = 365 - (datetime.now() - date_of_registration).days
+        row_data['Time Spent'] = enrollment.get('time_spent', 0)
 
         report_data.append(row_data)
 
