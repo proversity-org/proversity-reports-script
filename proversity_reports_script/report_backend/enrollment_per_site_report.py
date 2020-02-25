@@ -157,6 +157,9 @@ def build_course_enrollment_per_site_report(enrollment_data):
         row_data = OrderedDict()
         date_of_registration = get_datetime_object(enrollment.get('date_of_registration', ''))
         date_of_enrollment = get_datetime_object(enrollment.get('date_of_enrollment', ''))
+        date_of_first_access_to_course = get_datetime_object(
+            enrollment.get('date_of_first_access_to_course', ''),
+        )
         one_year = timedelta(days=365)
 
         row_data['Course'] = enrollment_data.get('course', '')
@@ -166,6 +169,7 @@ def build_course_enrollment_per_site_report(enrollment_data):
         row_data['Date of Enrollment'] = date_of_enrollment.strftime(date_format)
         row_data['Date of Registration'] = date_of_registration.strftime(date_format)
         row_data['Date of first access'] = date_of_registration.strftime(date_format)
+        row_data['Date of first access to course'] = date_of_first_access_to_course.strftime(date_format)
         row_data['Date of Licence Expiration'] = (date_of_registration + one_year).strftime(date_format)
         row_data['Days used'] = (datetime.now() - date_of_registration).days
         row_data['Licence days remaining'] = 365 - (datetime.now() - date_of_registration).days
@@ -185,6 +189,9 @@ def get_datetime_object(date_string):
     Returns:
         datetime object.
     """
+    if not date_string:
+        return datetime.now()
+
     date = date_string[0:date_string.find(' ')]
     date_object = datetime.strptime(date, '%Y-%m-%d')
 
