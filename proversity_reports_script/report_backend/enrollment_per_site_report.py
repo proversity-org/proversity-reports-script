@@ -98,13 +98,7 @@ class EnrollmentPerSiteReport(AbstractBaseReportBackend):
             return None
 
         with open(file_path, mode='w', encoding='utf-8') as csv_file:
-            writer = csv.DictWriter(
-                csv_file,
-                fieldnames=headers,
-                quoting=csv.QUOTE_NONE,
-                doublequote=False,
-                escapechar=';',
-            )
+            writer = csv.DictWriter(csv_file, fieldnames=headers)
 
             writer.writeheader()
 
