@@ -20,6 +20,7 @@ class EnrollmentPerSiteReport(AbstractBaseReportBackend):
         extra_data = kwargs.get('extra_data', {})
         self.bucket_name = extra_data.get('BUCKET_NAME', '')
         self.site_name = getattr(extra_data.get('extra_arguments', {}), 'site_name', '')
+        self.active_license_time = extra_data.get('ACTIVE_LICENSE_TIME_IN_DAYS', 365)
 
         super(EnrollmentPerSiteReport, self).__init__(extra_data.get('SPREADSHEET_DATA', {}))
 
@@ -47,7 +48,7 @@ class EnrollmentPerSiteReport(AbstractBaseReportBackend):
             if not page_data:
                 continue
 
-            report_data.extend(build_course_enrollment_per_site_report(page_data))
+            report_data.extend(build_course_enrollment_per_site_report(page_data, self.active_license_time))
             row_data = build_courses_per_site_data(page_data)
 
             # Drop and reduce same course items.
@@ -135,12 +136,13 @@ class EnrollmentPerSiteReport(AbstractBaseReportBackend):
         )
 
 
-def build_course_enrollment_per_site_report(enrollment_data):
+def build_course_enrollment_per_site_report(enrollment_data, active_license_time):
     """
     Build and return the enrollment per site data.
 
     Args:
         enrollment_data: Dict that contains the enrollment per course data.
+        active_license_time: Time in days that the license is active.
     Returns:
         report_data: List containing the rows of the report.
     """
@@ -160,13 +162,34 @@ def build_course_enrollment_per_site_report(enrollment_data):
         row_data['Username'] = enrollment.get('username', '')
         row_data['Email'] = enrollment.get('email', '')
         row_data['Role'] = enrollment.get('role', '')
-        row_data['Date of Enrollment'] = date_of_enrollment.strftime(date_format)
-        row_data['Date of Registration'] = date_of_registration.strftime(date_format)
-        row_data['Date of first access'] = date_of_registration.strftime(date_format)
-        row_data['Date of first access to course'] = date_of_first_access_to_course.strftime(date_format)
-        row_data['Date of Licence Expiration'] = (date_of_registration + one_year).strftime(date_format)
-        row_data['Days used'] = (datetime.now() - date_of_registration).days
-        row_data['Licence days remaining'] = 365 - (datetime.now() - date_of_registration).days
+        row_data['Date of Enrollment'] = (
+            date_of_enrollment.strftime(date_format)
+            if date_of_enrollment else ''
+        )
+        row_data['Date of Registration'] = (
+            date_of_registration.strftime(date_format)
+            if date_of_registration else ''
+        )
+        row_data['Date of first access'] = (
+            date_of_registration.strftime(date_format)
+            if date_of_registration else ''
+        )
+        row_data['Date of first access to course'] = (
+            date_of_first_access_to_course.strftime(date_format)
+            if date_of_first_access_to_course else ''
+        )
+        row_data['Date of Licence Expiration'] = (
+            (date_of_registration + one_year).strftime(date_format)
+            if date_of_registration else ''
+        )
+        row_data['Days used'] = (
+            (datetime.now() - date_of_registration).days
+            if date_of_registration else ''
+        )
+        row_data['Licence days remaining'] = (
+            active_license_time - (datetime.now() - date_of_registration).days
+            if date_of_registration else ''
+        )
         row_data['Time Spent'] = enrollment.get('time_spent', 0)
 
         report_data.append(row_data)
@@ -181,10 +204,10 @@ def get_datetime_object(date_string):
     Args:
         date_string: Date string.
     Returns:
-        datetime object.
+        datetime object or an empty string if date_string is empty.
     """
     if not date_string:
-        return datetime.now()
+        return ''
 
     date = date_string[0:date_string.find(' ')]
     date_object = datetime.strptime(date, '%Y-%m-%d')
