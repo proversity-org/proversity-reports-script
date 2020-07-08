@@ -5,9 +5,11 @@ Main module to request and polling the report data.
 from importlib import import_module
 from time import sleep
 
-import requests
-
 from proversity_reports_script.get_settings import get_settings
+from proversity_reports_script.request_module import request_handler
+from proversity_reports_script.report_apis.report_api_v1 import (
+    get_report_generation_data as get_report_generation_data_v1,
+)
 
 
 class FetchReportData(object):
@@ -44,32 +46,70 @@ class FetchReportData(object):
         Initialize the report pipeline to fetch the report data
         and then initialize the appropriate report backend.
         """
+        self.init_report_backend(
+            report_data=self.get_report_data(
+                report_generation_request_response=self.get_report_generation_data(),
+                request_headers=self.get_request_headers(),
+            )
+        )
+
+    def get_report_generation_data(self):
+        """
+        Return the response data from the report generation request.
+
+        Since API v0 does not support paging, it returns the plain response data.
+
+        For API v1, to avoid requesting data for a large set of courses (and probably get a 504 error),
+        the report generation request is divided into groups of courses
+        determined by EXTRA_DATA['MAX_COURSES_PER_REQUEST'] from the report configuration.
+        Each response data is collected into one object.
+
+        Returns:
+            v0:
+                {
+                    "message": "The task with id = {task id} has been initialize.",
+                    "state_url": "http://lms-domain/proversity-reports/api/v0/get-report-data?task_id={task id}",
+                    "success": true
+                }
+            v1:
+                {
+                    "data": [
+                        "course-id-0": [
+                            "http://lms-domain/proversity-reports/api/v1/get-report-data?task_id={task id}"
+                        ],
+                        "course-id-1": [
+                            "http://lms-domain/proversity-reports/api/v1/get-report-data?task_id={task id}"
+                            "http://lms-domain/proversity-reports/api/v1/get-report-data?task_id={task id}"
+                        ]...
+                    ]
+                }
+        """
         initial_report_request_url, report_generation_request_data = self.report_generation_request_data()
         extra_request_data = self.report_settings.get('EXTRA_REQUEST_DATA', {})
-        request_headers = {
-            'Authorization': 'Bearer {}'.format(self.settings.get('OPEN_EDX_OAUTH_TOKEN', '')),
-            'Content-Type': 'application/json',
-        }
 
         if not initial_report_request_url:
             print('Report URL was not provided.')
             exit()
 
-        print('Report generation requested to: {}'.format(initial_report_request_url))
-        initial_report_generation_data = request_handler(
-            request_url=initial_report_request_url,
-            request_data=report_generation_request_data,
-            request_type='POST',
-            request_headers=request_headers,
-            query_params=extra_request_data.get('query_params', {}),
-        )
+        if self.api_version == 'v0':
+            print('Report generation requested to: {}'.format(initial_report_request_url))
 
-        self.init_report_backend(
-            report_data=self.get_report_data(
-                report_generation_request_response=initial_report_generation_data,
-                request_headers=request_headers,
+            return request_handler(
+                request_url=initial_report_request_url,
+                request_data=report_generation_request_data,
+                request_type='POST',
+                request_headers=self.get_request_headers(),
+                query_params=extra_request_data.get('query_params', {}),
             )
-        )
+
+        if self.api_version == 'v1':
+            return get_report_generation_data_v1(
+                request_data=report_generation_request_data,
+                request_url=initial_report_request_url,
+                extra_request_data=extra_request_data,
+                report_settings=self.report_settings,
+                request_headers=self.get_request_headers(),
+            )
 
     def report_generation_request_data(self):
         """
@@ -164,43 +204,17 @@ class FetchReportData(object):
 
         return extra_request_data
 
+    def get_request_headers(self):
+        """
+        Return a dict containing common request headers.
 
-def request_handler(request_url, request_data, request_type, request_headers, query_params):
-    """
-    Request the provided data.
-
-    Args:
-        request_url: URL of the API endpoint to request the report generation or report data.
-        request_data: Dict that contains the request body.
-        request_type: POST or GET request.
-        request_headers: Dict that contains the request headers.
-        query_params: Dict that contains the query params that will be included in the request.
-    Returns:
-        JSON response.
-    """
-    if request_type == 'POST':
-        request_response = requests.post(
-            request_url,
-            headers=request_headers,
-            json=request_data,
-            params=query_params,
-        )
-    elif request_type == 'GET':
-        request_response = requests.get(request_url, headers=request_headers, params=query_params)
-    else:
-        print('Request type {} not supported.'.format(request_type))
-        exit()
-
-    status_code = request_response.status_code
-
-    if status_code in (202, 200):
-        return request_response.json()
-
-    print('Request to {} got an unexpected response {}'.format(
-        request_url,
-        status_code,
-    ))
-    exit()
+        Returns:
+            Dict that contains common request HTTP headers.
+        """
+        return {
+            'Authorization': 'Bearer {}'.format(self.settings.get('OPEN_EDX_OAUTH_TOKEN', '')),
+            'Content-Type': 'application/json',
+        }
 
 
 def polling_report_data(report_data_url, request_headers):
