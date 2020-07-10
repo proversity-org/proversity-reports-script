@@ -56,6 +56,36 @@ The configuration file must be in json format. e.g.
                 "my-additional-request-field": "my-additional-request-value"
             }
         },
+        "LAST-LOGIN-REPORT":{
+            "REPORT_URL":"example:/proversity-reports/api/v0/generate-last-login-report",
+            "BACKEND_REPORT":"proversity_reports_script.report_backend.last_login_report:LastLoginReportBackend",
+            "EXTRA_DATA":{
+                "BUCKET_NAME":"Name of the bucket to store the reports",
+                "SPREADSHEET_DATA":{
+                    "last_login_report_<course_id>":"Spreadsheet id for last login report."
+                }
+            } 
+        },
+        "ACTIVITY-COMPLETION-REPORT":{
+            "REPORT_URL":"example:/proversity-reports/api/v0/generate-activity-completion-report",
+            "BACKEND_REPORT":"proversity_reports_script.report_backend.activity_completion_report:ActivityCompletionReportBackend",
+            "EXTRA_REQUEST_DATA":{
+                "required_activity_ids":[
+                    ...
+                ],
+                "block_types":[
+                    "freetextresponse",
+                    "activetabe",
+                    ...
+                ]
+            },
+            "EXTRA_DATA":{
+                "BUCKET_NAME":"Name of the bucket to store the reports",
+                "SPREADSHEET_DATA":{
+                    "activity_completion_report_<course_id>":"Spreadsheet id for activity completion report."
+                }
+            }
+        },
         "Add a new key in uppercase according to the new SUPPORTED_REPORTS value.
         The new key must have the keys REPORT_URL and BACKEND_REPORT."
         "COURSES": [
