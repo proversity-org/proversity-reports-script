@@ -98,7 +98,7 @@ class LastLoginReportBackend(AbstractBaseReportBackend):
 
         reports_bucket.upload_file(
             path_file,
-            'capaciti/last_login_report/{course}/{date}.csv'.format(
+            'reports/{course}/last_login_report/{date}.csv'.format(
                 course=course,
                 date=now,
             )
