@@ -8,6 +8,7 @@ from datetime import datetime
 
 import boto3
 
+from proversity_reports_script.google_apis.sheets_api import update_sheets_data
 from proversity_reports_script.report_backend.base import AbstractBaseReportBackend
 from proversity_reports_script.report_backend.util import get_required_activity_dict
 
@@ -20,6 +21,7 @@ class ActivityCompletionReportBackend(AbstractBaseReportBackend):
     def __init__(self, *args, **kwargs):
         extra_data = kwargs.get('extra_data', {})
         self.bucket_name = extra_data.get('BUCKET_NAME', '')
+        self.spreadsheet_range = extra_data.get('SPREADSHEET_RANGE_NAME', 'Sheet1')
 
         super(ActivityCompletionReportBackend, self).__init__(extra_data.get('SPREADSHEET_DATA', {}))
 
@@ -42,13 +44,14 @@ class ActivityCompletionReportBackend(AbstractBaseReportBackend):
                 continue
 
             self.create_csv_file(
-                course,
-                csv_data,
-                csv_data[0].keys(),
+                file_name=course,
+                body_dict=csv_data,
+                course_id=course,
+                headers=csv_data[0].keys(),
             )
 
 
-    def create_csv_file(self, file_name, body_dict, headers, *args, **kwargs):
+    def create_csv_file(self, file_name, body_dict, course_id, headers, *args, **kwargs):
         """
         Create the csv file with the passed arguments, and then save it locally.
         """
@@ -67,6 +70,11 @@ class ActivityCompletionReportBackend(AbstractBaseReportBackend):
                 writer.writerow(row)
 
         self.upload_file_to_storage(file_name, path_file)
+        update_sheets_data(
+            file_path=path_file,
+            spreadsheet_id=self.spreadsheet_data.get('activity_completion_report_{}'.format(course_id)),
+            spreadsheet_range_name=self.spreadsheet_range,
+        )
 
 
     def upload_file_to_storage(self, course, path_file):
