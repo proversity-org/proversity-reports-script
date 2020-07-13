@@ -20,6 +20,7 @@ class LastLoginReportBackend(AbstractBaseReportBackend):
     def __init__(self, *args, **kwargs):
         extra_data = kwargs.get('extra_data', {})
         self.bucket_name = extra_data.get('BUCKET_NAME', '')
+        self.bucket_root_path = extra_data.get('BUCKET_ROOT_PATH', 'reports')
         self.spreadsheet_range = extra_data.get('SPREADSHEET_RANGE_NAME', 'Sheet1')
 
         super(LastLoginReportBackend, self).__init__(extra_data.get('SPREADSHEET_DATA', {}))
@@ -98,7 +99,8 @@ class LastLoginReportBackend(AbstractBaseReportBackend):
 
         reports_bucket.upload_file(
             path_file,
-            'reports/{course}/last_login_report/{date}.csv'.format(
+            '{root}/{course}/last_login_report/{date}.csv'.format(
+                root=self.bucket_root_path,
                 course=course,
                 date=now,
             )
